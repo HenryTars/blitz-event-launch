@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  name       String?
+  createdAt  DateTime  @default(now())
+  events     Event[]   @relation("AuthorEvents")
+}
+
+model Event {
+  id            String       @id @default(cuid())
+  title         String
+  description   String
+  slug          String       @unique
+  venue         String?
+  startAt       DateTime
+  endAt         DateTime?
+  heroImageUrl  String?
+  theme         String       @default("luxury")
+  createdAt     DateTime     @default(now())
+  author        User         @relation(fields: [authorId], references: [id], name: "AuthorEvents")
+  authorId      String
+  books         Book[]
+  invitations   Invitation[]
+  analytics     EventAnalytics?
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  author      String
+  coverUrl    String?
+  description String?
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     String
+  preorders   Preorder[]
+}
+
+model Invitation {
+  id            String     @id @default(cuid())
+  event         Event      @relation(fields: [eventId], references: [id])
+  eventId       String
+  guestName     String
+  email         String
+  phone         String?
+  token         String     @unique
+  status        String     @default("PENDING")
+  rsvpAt        DateTime?
+  createdAt     DateTime   @default(now())
+  preorder      Preorder?
+  checkIns      CheckIn[]
+}
+
+
+model Preorder {
+  id           String   @id @default(cuid())
+  invitation   Invitation @relation(fields: [invitationId], references: [id])
+  invitationId String   @unique
+  book        Book      @relation(fields: [bookId], references: [id])
+  bookId      String
+  quantity     Int      @default(1)
+  createdAt    DateTime @default(now())
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  invitation   Invitation @relation(fields: [invitationId], references: [id])
+  invitationId String
+  scannedAt    DateTime @default(now())
+}
+
+model EventAnalytics {
+  id              String   @id @default(cuid())
+  event           Event    @relation(fields: [eventId], references: [id])
+  eventId         String   @unique
+  totalInvites    Int      @default(0)
+  acceptedCount   Int      @default(0)
+  declinedCount   Int      @default(0)
+  preorderCount   Int      @default(0)
+  attendanceCount Int      @default(0)
+}
