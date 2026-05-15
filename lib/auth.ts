@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma';
 
 export async function requireAuthenticatedUser() {
   const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return {
+      user: null,
+      errorResponse: NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
+    };
+  }
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user?.email) {

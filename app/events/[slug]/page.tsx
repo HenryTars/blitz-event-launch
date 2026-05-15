@@ -28,9 +28,11 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
   let isOrganizer = false;
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email && user.email.toLowerCase() === event.author.email.toLowerCase()) {
-      isOrganizer = true;
+    if (supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email && user.email.toLowerCase() === event.author.email.toLowerCase()) {
+        isOrganizer = true;
+      }
     }
   } catch {
     // Not authenticated — not an organizer
