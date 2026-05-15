@@ -4,17 +4,26 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface QRCodeProps {
-  eventSlug: string;
+  eventSlug?: string;
+  token?: string;
+  shortCode?: string;
   size?: number;
+  label?: string;
 }
 
-export default function QRCodeComponent({ eventSlug, size = 256 }: QRCodeProps) {
-  // Generate QR code URL using QR Server API (free, no dependencies needed)
+export default function QRCodeComponent({ eventSlug, token, shortCode, size = 256, label }: QRCodeProps) {
+  const qrData = useMemo(() => {
+    if (shortCode) return shortCode;
+    if (token && typeof window !== 'undefined') return `${window.location.origin}/invite/${token}`;
+    if (token) return `https://localhost:3000/invite/${token}`;
+    if (eventSlug && typeof window !== 'undefined') return `${window.location.origin}/events/${eventSlug}/checkin`;
+    if (eventSlug) return `https://localhost:3000/events/${eventSlug}/checkin`;
+    return 'https://hadithi.app';
+  }, [eventSlug, token, shortCode]);
+
   const qrCodeUrl = useMemo(() => {
-    const checkInUrl = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3004'}/events/${eventSlug}/checkin`;
-    const encodedUrl = encodeURIComponent(checkInUrl);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedUrl}`;
-  }, [eventSlug, size]);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrData)}`;
+  }, [qrData, size]);
 
   return (
     <motion.div
@@ -22,18 +31,21 @@ export default function QRCodeComponent({ eventSlug, size = 256 }: QRCodeProps) 
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center justify-center gap-4"
     >
-      <div className="p-4 bg-white rounded-xl">
+      <div className="rounded-xl bg-white p-4 shadow-lg">
         <img
           src={qrCodeUrl}
-          alt="Event Check-in QR Code"
+          alt="QR Code"
           width={size}
           height={size}
           className="rounded-lg"
         />
       </div>
-      <p className="text-sm text-slate-400 text-center">
-        Scan to check in to {eventSlug}
-      </p>
+      {label && (
+        <p className="text-sm text-slate-400 text-center max-w-xs">{label}</p>
+      )}
+      {shortCode && (
+        <p className="font-mono text-lg tracking-[0.3em] text-gold">{shortCode}</p>
+      )}
     </motion.div>
   );
 }

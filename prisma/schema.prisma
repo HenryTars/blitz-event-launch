@@ -54,6 +54,7 @@ model Invitation {
   email         String
   phone         String?
   token         String     @unique
+  shortCode     String     @unique @default("")
   status        String     @default("PENDING")
   rsvpAt        DateTime?
   createdAt     DateTime   @default(now())

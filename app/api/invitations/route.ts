@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { createInvitationSchema } from '@/lib/validation/invitation';
+import { generateShortCode } from '@/lib/shortcode';
 
 const createToken = (eventId: string, guestName: string) => {
   const raw = `${eventId}|${guestName}|${Date.now()}|${crypto.randomUUID()}`;
@@ -59,6 +60,10 @@ export async function POST(req: Request) {
     }
 
     const token = createToken(eventId, guestName);
+    let shortCode = generateShortCode();
+    while (await prisma.invitation.findUnique({ where: { shortCode } })) {
+      shortCode = generateShortCode();
+    }
 
     const invitation = await prisma.$transaction(async (tx) => {
       const createdInvitation = await tx.invitation.create({
@@ -67,7 +72,8 @@ export async function POST(req: Request) {
           guestName,
           email: normalizedEmail ?? '',
           phone: phone ?? '',
-          token
+          token,
+          shortCode
         }
       });
 

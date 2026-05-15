@@ -65,11 +65,11 @@ export default function MyEventsPage() {
   const totals = events.reduce(
     (acc, event) => {
       acc.totalEvents += 1;
-      acc.totalInvites += event.analytics.totalInvites;
-      acc.accepted += event.analytics.acceptedCount;
-      acc.declined += event.analytics.declinedCount;
-      acc.later += event.analytics.laterCount;
-      acc.checkedIn += event.analytics.attendanceCount;
+      acc.totalInvites += event.analytics.totalInvites ?? 0;
+      acc.accepted += event.analytics.acceptedCount ?? 0;
+      acc.declined += event.analytics.declinedCount ?? 0;
+      acc.later += event.analytics.laterCount ?? 0;
+      acc.checkedIn += event.analytics.attendanceCount ?? 0;
       return acc;
     },
     { totalEvents: 0, totalInvites: 0, accepted: 0, declined: 0, later: 0, checkedIn: 0 }

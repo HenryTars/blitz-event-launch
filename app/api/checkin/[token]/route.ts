@@ -1,72 +1,76 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isShortCodeExpired } from '@/lib/shortcode';
 
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
+    const trimmed = token.trim().toUpperCase();
 
-    const invitation = await prisma.invitation.findUnique({
-      where: { token }
-    });
+    // Look up by shortCode first (6 chars, uppercase), fallback to full token
+    const invitation = trimmed.length === 6
+      ? await prisma.invitation.findUnique({ where: { shortCode: trimmed }, include: { event: true } })
+      : await prisma.invitation.findUnique({ where: { token }, include: { event: true } });
 
     if (!invitation) {
-      return NextResponse.json({ error: 'Invalid check-in token' }, { status: 404 });
+      return NextResponse.json({ error: 'Invalid code. No invitation found.' }, { status: 404 });
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id: invitation.eventId }
-    });
-
-    if (!event) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    // Expiration check
+    if (isShortCodeExpired(invitation.event.endAt, invitation.event.startAt)) {
+      return NextResponse.json({ error: 'This event has already ended.' }, { status: 400 });
     }
 
     if (invitation.status !== 'ACCEPTED') {
-      return NextResponse.json({ error: 'Guest must accept the invitation before check-in' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Guest has not accepted. Current status: ${invitation.status}`,
+          guestName: invitation.guestName,
+          shortCode: invitation.shortCode
+        },
+        { status: 400 }
+      );
     }
 
-    // Check if already checked in
     const existingCheckIn = await prisma.checkIn.findFirst({
-      where: {
-        invitationId: invitation.id
-      }
+      where: { invitationId: invitation.id }
     });
 
     if (existingCheckIn) {
       return NextResponse.json({
-        message: 'Already checked in',
+        message: `${invitation.guestName} was already checked in.`,
         guestName: invitation.guestName,
+        shortCode: invitation.shortCode,
         checkedInAt: existingCheckIn.scannedAt,
-        eventTitle: event.title
+        eventTitle: invitation.event.title,
+        eventSlug: invitation.event.slug,
+        alreadyCheckedIn: true
       });
     }
 
-    // Create check-in record
     const checkIn = await prisma.checkIn.create({
-      data: {
-        invitationId: invitation.id
-      }
+      data: { invitationId: invitation.id }
     });
 
-    // Update analytics
     await prisma.eventAnalytics.update({
-      where: { eventId: event.id },
+      where: { eventId: invitation.event.id },
       data: { attendanceCount: { increment: 1 } }
     });
 
     return NextResponse.json({
-      message: 'Check-in successful',
+      message: `Welcome, ${invitation.guestName}!`,
       guestName: invitation.guestName,
+      shortCode: invitation.shortCode,
       checkedInAt: checkIn.scannedAt,
-      eventTitle: event.title
+      eventTitle: invitation.event.title,
+      eventSlug: invitation.event.slug,
+      alreadyCheckedIn: false
     });
   } catch (error) {
     console.error('Check-in error:', error);
-    return NextResponse.json({
-      error: 'Failed to process check-in'
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process check-in.' }, { status: 500 });
   }
 }

@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, MapPin, Clock, BookOpen, CheckCircle, XCircle, Clock as ClockIcon, type LucideIcon } from 'lucide-react';
+import QRCodeComponent from '@/components/QRCode';
+import { Calendar, MapPin, Clock, BookOpen, CheckCircle, XCircle, Clock as ClockIcon, Sparkles, Share2, type LucideIcon } from 'lucide-react';
 
 interface InvitationPageProps {
   token: string;
+  shortCode?: string;
   guestName: string;
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LATER';
   initialPreorderQuantity: number;
@@ -25,7 +28,7 @@ interface InvitationPageProps {
   };
 }
 
-export default function InvitationPage({ token, guestName, status, initialPreorderQuantity, event }: InvitationPageProps) {
+export default function InvitationPage({ token, shortCode, guestName, status, initialPreorderQuantity, event }: InvitationPageProps) {
   const [rsvpStatus, setRsvpStatus] = useState<'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LATER'>(status);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,55 +132,47 @@ export default function InvitationPage({ token, guestName, status, initialPreord
 
   return (
     <div className="min-h-screen bg-[#09070b] text-pearl">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-transparent to-slate-600/10" />
-        <div className="relative px-6 py-24 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
+      {/* ─── Cinematic Hero ─── */}
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(197,165,123,0.12),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgba(123,119,255,0.04),transparent)]" />
+        <div className="absolute left-1/4 top-1/3 h-64 w-64 rounded-full bg-gold/5 blur-[120px] animate-float" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#09070b]/20 to-[#09070b]" />
+
+        <div className="relative mx-auto max-w-4xl px-6 py-24 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="mb-8"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-gold"
             >
-              <div className="inline-block p-8 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-4xl font-semibold text-white mb-2"
-                >
-                  Dear {guestName}
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-slate-300"
-                >
-                  You are personally invited to
-                </motion.p>
-              </div>
+              <Sparkles className="h-3.5 w-3.5" />
+              You&apos;re Invited
             </motion.div>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="text-5xl font-semibold tracking-tight text-white sm:text-6xl"
-            >
+            <h1 className="font-serif text-display-md text-white text-shadow-subtle mb-4">
+              Dear {guestName}
+            </h1>
+            <p className="text-fluid-hero-sub text-slate-300 mb-8">
+              You are personally invited to
+            </p>
+
+            <div className="divider-gold-thick mx-auto mb-8 max-w-xs" />
+
+            <h2 className="font-serif text-display-lg text-white text-balance text-shadow-glow">
               {event.title}
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300"
-            >
+            </h2>
+            <p className="mx-auto mt-6 max-w-2xl text-fluid-hero-sub text-slate-200 leading-relaxed">
               {event.description}
-            </motion.p>
-          </div>
+            </p>
+          </motion.div>
         </div>
-      </div>
+      </section>
 
       <div className="px-6 py-12">
         <div className="mx-auto max-w-4xl">
@@ -229,6 +224,25 @@ export default function InvitationPage({ token, guestName, status, initialPreord
               </motion.div>
             )}
             {submitError && <p className="mt-4 text-sm text-red-300">{submitError}</p>}
+          </motion.div>
+
+          {/* QR Code — unique to this invitee */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-12 flex flex-col items-center"
+          >
+            <div className="glass rounded-2xl p-6 max-w-xs w-full">
+              <div className="flex items-center gap-2 mb-4 text-gold">
+                <Share2 className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-[0.2em]">Your Personal QR</span>
+              </div>
+              <QRCodeComponent shortCode={shortCode || token} size={200} />
+              <p className="mt-4 text-xs text-center text-slate-500 leading-relaxed">
+                Present this QR at the event entrance for quick check-in.
+              </p>
+            </div>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

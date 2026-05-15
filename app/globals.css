@@ -2,29 +2,228 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: #09070b;
-  color: #f8f5f2;
+@layer base {
+  :root {
+    color-scheme: dark;
+    --gold: #c5a57b;
+    --gold-light: #e5d3b8;
+    --pearl: #f8f5f2;
+    --ink: #0f172a;
+    --bg-deep: #09070b;
+    --bg-mid: #120d17;
+    --bg-surface: rgba(255, 255, 255, 0.04);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--pearl);
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(197, 165, 123, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(123, 119, 255, 0.04), transparent),
+      radial-gradient(ellipse 50% 30% at 20% 80%, rgba(197, 165, 123, 0.03), transparent),
+      linear-gradient(180deg, var(--bg-deep) 0%, #040309 100%);
+    background-attachment: fixed;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background: rgba(197, 165, 123, 0.25);
+    color: var(--pearl);
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(197, 165, 123, 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(197, 165, 123, 0.35);
+  }
+
+  /* Typography rhythm */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+
+  /* Fluid typography base */
+  .text-fluid-display-xl {
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .text-fluid-display-lg {
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+  .text-fluid-display {
+    font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .text-fluid-hero-sub {
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+  .text-fluid-quote {
+    font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+  }
+  .text-fluid-body {
+    font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+    line-height: 1.7;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+@layer components {
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .glass-gold {
+    background: linear-gradient(135deg, rgba(197, 165, 123, 0.08), rgba(197, 165, 123, 0.03));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(197, 165, 123, 0.15);
+  }
+
+  /* Gold accents */
+  .gold-border-bottom {
+    border-bottom: 2px solid rgba(197, 165, 123, 0.3);
+  }
+  .gold-border-left {
+    border-left: 3px solid var(--gold);
+  }
+
+  /* Premium card */
+  .card-premium {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-premium:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Shimmer skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* Quote block */
+  .quote-block {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 245, 242, 0.85);
+    border-left: 3px solid var(--gold);
+    padding-left: 1.5rem;
+  }
+
+  /* Subtle glow ring */
+  .ring-glow {
+    box-shadow: 0 0 0 1px rgba(197, 165, 123, 0.15), 0 0 30px rgba(197, 165, 123, 0.06);
+  }
+
+  /* Animated gradient border */
+  .border-glow {
+    position: relative;
+  }
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(197, 165, 123, 0.3), transparent, rgba(197, 165, 123, 0.15));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .border-glow:hover::before {
+    opacity: 1;
+  }
+
+  /* Decorative line */
+  .divider-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197, 165, 123, 0.3), transparent);
+  }
+  .divider-gold-thick {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(197, 165, 123, 0.4), transparent);
+  }
 }
 
-body {
-  min-height: 100vh;
-  margin: 0;
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 30%),
-    linear-gradient(180deg, #09070b 0%, #040309 100%);
-}
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  /* Gold text gradient */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #c5a57b 0%, #e5d3b8 50%, #c5a57b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-::selection {
-  background: rgba(197, 165, 123, 0.25);
-  color: #f8f5f2;
+  /* Subtle text shadow for depth */
+  .text-shadow-subtle {
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  }
+  .text-shadow-glow {
+    text-shadow: 0 0 40px rgba(197, 165, 123, 0.15);
+  }
 }

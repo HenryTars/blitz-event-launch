@@ -3,12 +3,54 @@ import { createEventSchema } from '@/lib/validation/event';
 import { requireAuthenticatedUser } from '@/lib/auth';
 import { Client } from 'pg';
 import { createId } from '@paralleldrive/cuid2';
+import { prisma } from '@/lib/prisma';
 
 const createSlug = (title: string) =>
   title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
+
+export async function GET() {
+  try {
+    const events = await prisma.event.findMany({
+      where: { startAt: { gte: new Date() } },
+      include: {
+        books: true,
+        author: { select: { name: true } },
+        analytics: true
+      },
+      orderBy: { startAt: 'asc' }
+    });
+
+    const formatted = events.map((event) => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      slug: event.slug,
+      venue: event.venue,
+      startAt: event.startAt,
+      endAt: event.endAt,
+      heroImageUrl: event.heroImageUrl,
+      theme: event.theme,
+      authorName: event.author.name,
+      book: event.books[0]
+        ? {
+            title: event.books[0].title,
+            author: event.books[0].author,
+            coverUrl: event.books[0].coverUrl
+          }
+        : null,
+      attendanceCount: event.analytics?.attendanceCount ?? 0,
+      totalInvites: event.analytics?.totalInvites ?? 0
+    }));
+
+    return NextResponse.json({ events: formatted });
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return NextResponse.json({ events: [] });
+  }
+}
 
 export async function POST(req: Request) {
   const client = new Client({
