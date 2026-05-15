@@ -22,7 +22,14 @@ export default function AuthPage() {
 
     try {
       const supabase = createSupabaseBrowserClient();
-      if (!supabase) { setError('Supabase not configured'); return; }
+      if (!supabase) {
+        const missing = [];
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+        if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+        setError(`Supabase not configured. Missing on Vercel: ${missing.join(', ')}. Add them in Settings → Environment Variables and redeploy.`);
+        setLoading(false);
+        return;
+      }
       if (mode === 'signin') {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
