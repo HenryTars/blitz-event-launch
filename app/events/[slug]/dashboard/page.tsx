@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import QRCodeComponent from '@/components/QRCode';
-import { Download, QrCode, Users, CheckCircle2, XCircle, Clock, Mail as MailIcon, BookOpen } from 'lucide-react';
+import DeleteEventModal from '@/components/DeleteEventModal';
+import { Download, QrCode, Users, CheckCircle2, XCircle, Clock, Mail as MailIcon, BookOpen, Edit3, Trash2 } from 'lucide-react';
 
 interface Guest {
   id: string;
@@ -40,6 +42,7 @@ export default function EventDashboard() {
   const [error, setError] = useState('');
   const [showQR, setShowQR] = useState(false);
   const [busyGuestId, setBusyGuestId] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchEventData = async () => {
     try {
@@ -210,7 +213,7 @@ export default function EventDashboard() {
           ))}
         </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex gap-4 mb-12">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-wrap gap-4 mb-12">
           <Button onClick={() => setShowQR(!showQR)} variant="secondary" className="gap-2">
             <QrCode size={18} />
             {showQR ? 'Hide QR Code' : 'Show QR Code'}
@@ -218,6 +221,16 @@ export default function EventDashboard() {
           <Button variant="secondary" className="gap-2" onClick={exportGuestList} disabled={!guests.length}>
             <Download size={18} />
             Export Guest List
+          </Button>
+          <Link href={`/events/${slug}/edit`}>
+            <Button variant="secondary" className="gap-2">
+              <Edit3 size={18} />
+              Edit Event
+            </Button>
+          </Link>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(true)} className="gap-2 border-red-500/30 text-red-200 hover:bg-red-500/10">
+            <Trash2 size={18} />
+            Delete
           </Button>
         </motion.div>
 
@@ -289,6 +302,17 @@ export default function EventDashboard() {
             </div>
           )}
         </motion.div>
+
+        <DeleteEventModal
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          eventSlug={slug}
+          eventTitle={eventData?.title || ''}
+          onDeleted={() => {
+            setShowDeleteModal(false);
+            window.location.href = '/my-events';
+          }}
+        />
       </div>
     </div>
   );

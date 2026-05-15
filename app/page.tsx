@@ -16,6 +16,7 @@ interface EventData {
   endAt?: string | null;
   heroImageUrl?: string | null;
   theme: string;
+  featured?: boolean;
   authorName?: string | null;
   book?: { title: string; author: string; coverUrl?: string | null } | null;
   attendanceCount?: number;
@@ -170,11 +171,28 @@ export default function HomePage() {
               </Link>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {events.map((event, i) => (
-                <EventCard key={event.id} event={event} index={i} />
-              ))}
-            </div>
+            <>
+              {events.some((e) => e.featured) && (
+                <div className="mb-12">
+                  <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.28em] text-gold">Featured</h3>
+                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    {events.filter((e) => e.featured).map((event, i) => (
+                      <EventCard key={event.id} event={event} index={i} featured />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                {events.some((e) => e.featured) && (
+                  <h3 className="mb-6 text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">All Events</h3>
+                )}
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  {events.filter((e) => !e.featured).map((event, i) => (
+                    <EventCard key={event.id} event={event} index={i} />
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </section>

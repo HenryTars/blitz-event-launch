@@ -8,12 +8,28 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserRole {
+  USER
+  ORGANIZER
+  SUPER_ADMIN
+}
+
 model User {
-  id         String    @id @default(cuid())
-  email      String    @unique
-  name       String?
-  createdAt  DateTime  @default(now())
-  events     Event[]   @relation("AuthorEvents")
+  id            String          @id @default(cuid())
+  email         String          @unique
+  name          String?
+  role          UserRole        @default(USER)
+  avatarUrl     String?
+  bio           String?
+  isSuspended   Boolean         @default(false)
+  suspendedAt   DateTime?
+  suspendedBy   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  events        Event[]         @relation("AuthorEvents")
+  auditLogs     AuditLog[]
+  adminActions  AdminAction[]
+  invitations   Invitation[]
 }
 
 model Event {
@@ -26,24 +42,36 @@ model Event {
   endAt         DateTime?
   heroImageUrl  String?
   theme         String       @default("luxury")
+  published     Boolean      @default(false)
+  featured      Boolean      @default(false)
+  deleted       Boolean      @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   author        User         @relation(fields: [authorId], references: [id], name: "AuthorEvents")
   authorId      String
   books         Book[]
   invitations   Invitation[]
   analytics     EventAnalytics?
+
+  @@index([authorId])
+  @@index([published, deleted])
+  @@index([featured, published, deleted])
+  @@index([slug])
 }
 
 model Book {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   subtitle    String?
   author      String
   coverUrl    String?
   description String?
-  event       Event    @relation(fields: [eventId], references: [id])
+  event       Event      @relation(fields: [eventId], references: [id])
   eventId     String
   preorders   Preorder[]
+
+  @@index([eventId])
 }
 
 model Invitation {
@@ -51,33 +79,44 @@ model Invitation {
   event         Event      @relation(fields: [eventId], references: [id])
   eventId       String
   guestName     String
-  email         String
+  email         String?
   phone         String?
   token         String     @unique
   shortCode     String     @unique @default("")
   status        String     @default("PENDING")
   rsvpAt        DateTime?
+  createdBy     String?
   createdAt     DateTime   @default(now())
   preorder      Preorder?
   checkIns      CheckIn[]
-}
+  user          User?      @relation(fields: [userId], references: [id])
+  userId        String?
 
+  @@index([eventId])
+  @@index([status])
+  @@index([shortCode])
+}
 
 model Preorder {
   id           String   @id @default(cuid())
   invitation   Invitation @relation(fields: [invitationId], references: [id])
   invitationId String   @unique
-  book        Book      @relation(fields: [bookId], references: [id])
-  bookId      String
+  book         Book     @relation(fields: [bookId], references: [id])
+  bookId       String
   quantity     Int      @default(1)
   createdAt    DateTime @default(now())
+
+  @@index([bookId])
 }
 
 model CheckIn {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   invitation   Invitation @relation(fields: [invitationId], references: [id])
   invitationId String
-  scannedAt    DateTime @default(now())
+  scannedAt    DateTime   @default(now())
+
+  @@index([invitationId])
+  @@index([scannedAt])
 }
 
 model EventAnalytics {
@@ -87,6 +126,49 @@ model EventAnalytics {
   totalInvites    Int      @default(0)
   acceptedCount   Int      @default(0)
   declinedCount   Int      @default(0)
+  laterCount      Int      @default(0)
   preorderCount   Int      @default(0)
   attendanceCount Int      @default(0)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String?
+  description String?
+  metadata    String?
+  ipAddress   String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AdminAction {
+  id          String   @id @default(cuid())
+  action      String
+  targetType  String
+  targetId    String?
+  reason      String?
+  metadata    String?
+  adminId     String
+  admin       User     @relation(fields: [adminId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

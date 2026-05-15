@@ -15,12 +15,14 @@ interface EventCardProps {
     startAt: string | Date;
     heroImageUrl?: string | null;
     theme: string;
+    featured?: boolean | null;
     authorName?: string | null;
     book?: { title: string; author: string; coverUrl?: string | null } | null;
     attendanceCount?: number;
     totalInvites?: number;
   };
   index?: number;
+  featured?: boolean;
 }
 
 const themeGradients: Record<string, string> = {
@@ -29,7 +31,7 @@ const themeGradients: Record<string, string> = {
   minimal: 'from-slate-300/10 via-slate-700/5 to-transparent'
 };
 
-export default function EventCard({ event, index = 0 }: EventCardProps) {
+export default function EventCard({ event, index = 0, featured = false }: EventCardProps) {
   const startDate = new Date(event.startAt);
   const gradient = themeGradients[event.theme] ?? themeGradients.luxury;
   const hasCover = event.heroImageUrl || event.book?.coverUrl;
@@ -61,6 +63,13 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
           <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
             {event.theme}
           </div>
+
+          {/* Featured badge */}
+          {featured && (
+            <div className="absolute right-4 top-4 rounded-full bg-gold/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink backdrop-blur-sm">
+              Featured
+            </div>
+          )}
 
           {/* Date badge */}
           <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 text-xs text-pearl backdrop-blur-sm">

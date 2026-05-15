@@ -2,23 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
-  // Skip auth for static files and API routes that don't need it
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith('/_next/') || pathname.startsWith('/api/') || pathname === '/favicon.ico') {
+
+  // Skip static files
+  if (pathname.startsWith('/_next/') || pathname === '/favicon.ico') {
     return NextResponse.next();
   }
 
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseKey) {
+    // If missing env vars and accessing admin, redirect to auth
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
     return response;
   }
 
   try {
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -30,9 +35,16 @@ export async function middleware(request: NextRequest) {
         }
       }
     });
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Admin routes: redirect to auth if not authenticated
+    if (pathname.startsWith('/admin') && !user) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
   } catch {
-    // Auth unavailable — continue without user session
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
   }
 
   return response;

@@ -3,15 +3,22 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Sparkles, LogOut, User } from 'lucide-react';
+import { ChevronLeft, Sparkles, LogOut, User, Shield } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+
+interface AuthUser {
+  email: string;
+  role: string;
+}
 
 function getBackLink(pathname: string): { href: string; label: string } | null {
   if (pathname === '/') return null;
   const segments = pathname.split('/').filter(Boolean);
 
+  if (pathname.startsWith('/admin')) return { href: '/', label: 'Home' };
   if (pathname.startsWith('/events/') && segments.length >= 3) {
     const slug = segments[1];
+    if (segments[2] === 'edit') return { href: `/events/${slug}/dashboard`, label: 'Dashboard' };
     if (segments[2] === 'dashboard') return { href: `/events/${slug}`, label: 'Event' };
     if (segments[2] === 'checkin') return { href: `/events/${slug}/dashboard`, label: 'Dashboard' };
     return { href: '/', label: 'Home' };
@@ -28,17 +35,29 @@ export default function Header() {
   const router = useRouter();
   const isHome = pathname === '/';
   const isInvitePage = pathname.startsWith('/invite/');
+  const isAdminPage = pathname.startsWith('/admin');
   const back = getBackLink(pathname);
 
-  const [authUser, setAuthUser] = useState<{ email: string } | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (data.user?.email) {
-        setAuthUser({ email: data.user.email });
+        const email = data.user.email.toLowerCase();
+        try {
+          const res = await fetch('/api/events/mine');
+          if (res.ok) {
+            const payload = await res.json();
+            setAuthUser({ email, role: payload.user?.role || 'USER' });
+          } else {
+            setAuthUser({ email, role: 'USER' });
+          }
+        } catch {
+          setAuthUser({ email, role: 'USER' });
+        }
       }
     });
   }, [pathname]);
@@ -54,6 +73,9 @@ export default function Header() {
     router.push('/');
     router.refresh();
   };
+
+  // Don't show header on admin pages (admin has its own sidebar)
+  if (isAdminPage) return null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -96,9 +118,33 @@ export default function Header() {
           )}
 
           {authUser && (
-            <div className="flex items-center gap-3">
-              <span className="hidden text-xs text-slate-500 sm:block truncate max-w-[140px]">
+            <div className="flex items-center gap-2">
+              {authUser.role === 'SUPER_ADMIN' && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3.5 py-1.5 text-xs font-medium text-gold transition hover:bg-gold/10"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  Admin
+                </Link>
+              )}
+              <Link
+                href="/my-events"
+                className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-white/20 hover:text-pearl"
+              >
+                My Events
+              </Link>
+              <Link
+                href="/create-event"
+                className="rounded-full bg-gold px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:bg-gold-500"
+              >
+                Create Event
+              </Link>
+              <span className="hidden text-xs text-slate-500 sm:block truncate max-w-[120px]">
                 {authUser.email}
+              </span>
+              <span className="hidden sm:inline rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-slate-500">
+                {authUser.role}
               </span>
               <button
                 onClick={handleSignOut}

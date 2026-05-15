@@ -4,6 +4,7 @@ import { requireAuthenticatedUser } from '@/lib/auth';
 import { Client } from 'pg';
 import { createId } from '@paralleldrive/cuid2';
 import { prisma } from '@/lib/prisma';
+import { createAuditLog } from '@/lib/audit';
 
 const createSlug = (title: string) =>
   title
@@ -14,7 +15,7 @@ const createSlug = (title: string) =>
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      where: { startAt: { gte: new Date() } },
+      where: { published: true, deleted: false, startAt: { gte: new Date() } },
       include: {
         books: true,
         author: { select: { name: true } },
@@ -33,6 +34,7 @@ export async function GET() {
       endAt: event.endAt,
       heroImageUrl: event.heroImageUrl,
       theme: event.theme,
+      featured: event.featured,
       authorName: event.author.name,
       book: event.books[0]
         ? {
@@ -154,6 +156,14 @@ export async function POST(req: Request) {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [analyticsId, event.id, 0, 0, 0, 0, 0]
     );
+
+    await createAuditLog({
+      action: 'event.created',
+      entity: 'Event',
+      entityId: event.id,
+      description: `Created event: ${event.title}`,
+      userId: author.id,
+    });
 
     return NextResponse.json({
       id: event.id,
