@@ -183,10 +183,10 @@ export default function HomePage() {
       <footer className="border-t border-white/5 px-6 py-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <span className="font-serif text-sm text-slate-500">
-            Hadithi — where stories come alive
+            BLITZ Dar — where stories come alive
           </span>
           <span className="text-xs text-slate-600">
-            &copy; {new Date().getFullYear()} Hadithi
+            &copy; {new Date().getFullYear()} BLITZ Dar
           </span>
         </div>
       </footer>

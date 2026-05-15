@@ -69,7 +69,7 @@ export default function Header() {
           <Link href="/" className="group flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-gold transition group-hover:scale-110 group-hover:text-gold-300" />
             <span className="font-serif text-xl font-semibold tracking-wide text-pearl transition group-hover:text-gold">
-              Hadithi
+              BLITZ Dar
             </span>
           </Link>
         </div>

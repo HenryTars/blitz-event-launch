@@ -16,16 +16,16 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Hadithi — Book & Poetry Events',
+  title: 'BLITZ Dar — Book & Poetry Events',
   description:
     'A premium platform for cinematic book launches, intimate poetry salons, and unforgettable literary events. Curate invitations, manage RSVPs, and craft immersive guest experiences.',
   metadataBase: new URL('https://blitzlaunch.com'),
   openGraph: {
-    title: 'Hadithi — Book & Poetry Events',
+    title: 'BLITZ Dar — Book & Poetry Events',
     description:
       'A premium platform for cinematic book launches, intimate poetry salons, and unforgettable literary events.',
     type: 'website',
-    siteName: 'Hadithi'
+    siteName: 'BLITZ Dar'
   }
 };
 
