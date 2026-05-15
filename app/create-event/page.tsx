@@ -55,6 +55,7 @@ export default function CreateEventPage() {
   useEffect(() => {
     const hydrateAuth = async () => {
       const supabase = createSupabaseBrowserClient();
+      if (!supabase) { setAuthReady(true); return; }
       const { data } = await supabase.auth.getUser();
       if (data.user?.email) {
         setSessionEmail(data.user.email);

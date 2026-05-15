@@ -35,6 +35,7 @@ export default function MyEventsPage() {
     const init = async () => {
       try {
         const supabase = createSupabaseBrowserClient();
+        if (!supabase) { throw new Error('Supabase not configured'); }
         const { data } = await supabase.auth.getUser();
         if (!data.user?.email) {
           setError('Please sign in to view your events.');

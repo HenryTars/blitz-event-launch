@@ -35,6 +35,7 @@ export default function Header() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) {
         setAuthUser({ email: data.user.email });
@@ -45,7 +46,9 @@ export default function Header() {
   const handleSignOut = async () => {
     setSigningOut(true);
     const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setAuthUser(null);
     setSigningOut(false);
     router.push('/');
