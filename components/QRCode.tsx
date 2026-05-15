@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { getBaseUrl } from '@/lib/url';
 
 interface QRCodeProps {
   eventSlug?: string;
@@ -14,11 +15,10 @@ interface QRCodeProps {
 export default function QRCodeComponent({ eventSlug, token, shortCode, size = 256, label }: QRCodeProps) {
   const qrData = useMemo(() => {
     if (shortCode) return shortCode;
-    if (token && typeof window !== 'undefined') return `${window.location.origin}/invite/${token}`;
-    if (token) return `https://localhost:3000/invite/${token}`;
-    if (eventSlug && typeof window !== 'undefined') return `${window.location.origin}/events/${eventSlug}/checkin`;
-    if (eventSlug) return `https://localhost:3000/events/${eventSlug}/checkin`;
-    return 'https://hadithi.app';
+    const base = typeof window !== 'undefined' ? window.location.origin : getBaseUrl();
+    if (token) return `${base}/invite/${token}`;
+    if (eventSlug) return `${base}/events/${eventSlug}/checkin`;
+    return getBaseUrl();
   }, [eventSlug, token, shortCode]);
 
   const qrCodeUrl = useMemo(() => {

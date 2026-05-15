@@ -15,11 +15,15 @@ const playfair = Playfair_Display({
   display: 'swap'
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : null)
+  || 'https://blitzlaunch.com';
+
 export const metadata: Metadata = {
   title: 'BLITZ Dar — Book & Poetry Events',
   description:
     'A premium platform for cinematic book launches, intimate poetry salons, and unforgettable literary events. Curate invitations, manage RSVPs, and craft immersive guest experiences.',
-  metadataBase: new URL('https://blitzlaunch.com'),
+  metadataBase: new URL(baseUrl),
   openGraph: {
     title: 'BLITZ Dar — Book & Poetry Events',
     description:
