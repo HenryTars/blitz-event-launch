@@ -7,22 +7,7 @@ export async function GET() {
     const auth = await requireAuthenticatedUser();
     if (!auth.user) return auth.errorResponse!;
 
-    const organizerEmail = auth.user.email!.toLowerCase();
-
-    // Get user
-    const user = await prisma.user.findUnique({
-      where: { email: organizerEmail }
-    });
-
-    if (!user) {
-      return NextResponse.json({
-        organizer: {
-          email: organizerEmail,
-          name: 'Unknown User'
-        },
-        events: []
-      });
-    }
+    const user = auth.user.dbUser;
 
     // Get events with books and analytics
     const events = await prisma.event.findMany({

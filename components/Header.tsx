@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Sparkles, LogOut, Shield, Menu, X, CalendarPlus, List, Bell } from 'lucide-react';
+import { ChevronLeft, Sparkles, LogOut, Shield, Menu, X, CalendarPlus, List, Bell, Loader2 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import NotificationBell from '@/components/NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,28 +42,35 @@ export default function Header() {
   const back = getBackLink(pathname);
 
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) return;
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (data.user?.email) {
-        const email = data.user.email.toLowerCase();
-        try {
-          const res = await fetch('/api/events/mine');
-          if (res.ok) {
-            const payload = await res.json();
-            setAuthUser({ email, role: payload.user?.role || 'USER' });
-          } else {
-            setAuthUser({ email, role: 'USER' });
+    const checkAuth = async () => {
+      try {
+        // Try lightweight endpoint first
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            setAuthUser({ email: data.user.email, role: data.user.role });
           }
-        } catch {
-          setAuthUser({ email, role: 'USER' });
         }
+      } catch {
+        // fallback: use Supabase directly
+        const supabase = createSupabaseBrowserClient();
+        if (supabase) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) {
+            setAuthUser({ email: user.email.toLowerCase(), role: 'USER' });
+          }
+        }
+      } finally {
+        setAuthChecking(false);
       }
-    });
+    };
+    checkAuth();
   }, [pathname]);
 
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
@@ -106,9 +113,10 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          {authUser && (
+          {authChecking ? (
+            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+          ) : authUser ? (
             <>
-              {/* Desktop nav */}
               <div className="hidden md:flex items-center gap-2">
                 <NotificationBell />
                 {authUser.role === 'SUPER_ADMIN' && (
@@ -149,8 +157,6 @@ export default function Header() {
                   <span className="hidden lg:inline">{signingOut ? '...' : 'Sign Out'}</span>
                 </button>
               </div>
-
-              {/* Mobile: bell + hamburger */}
               <div className="flex md:hidden items-center gap-1">
                 <NotificationBell />
                 <button
@@ -162,9 +168,7 @@ export default function Header() {
                 </button>
               </div>
             </>
-          )}
-
-          {!authUser && (
+          ) : (
             <>
               {!isHome && !isInvitePage && (
                 <div className="flex items-center gap-2">
@@ -195,7 +199,6 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileMenuOpen && authUser && (
           <>

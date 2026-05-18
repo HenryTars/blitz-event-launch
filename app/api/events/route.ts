@@ -16,21 +16,21 @@ const createSlug = (title: string) =>
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      where: { status: 'PUBLISHED', deleted: false },
+      where: {
+        status: 'PUBLISHED',
+        deleted: false,
+        endAt: { gte: new Date() }
+      },
       include: {
         books: true,
         author: { select: { name: true } },
         analytics: true
       },
-      orderBy: { startAt: 'asc' }
+      orderBy: { startAt: 'asc' },
+      take: 50
     });
 
-    // Filter out permanently ended events, add lifecycle state
     const formatted = events
-      .filter((event) => {
-        const lifecycle = getEventLifecycle(event.startAt, event.endAt);
-        return lifecycle !== 'ENDED';
-      })
       .map((event) => ({
         id: event.id,
         title: event.title,
