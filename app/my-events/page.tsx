@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Mail, CheckCircle2, XCircle, Clock3, QrCode } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { EmptyStateIllustration, LiteraryIllustration } from '@/components/illustrations';
 
 interface EventSummary {
   id: string;
@@ -109,10 +110,12 @@ export default function MyEventsPage() {
         <section className="space-y-4">
           {loading && <p className="text-slate-300">Loading your events...</p>}
           {!loading && !error && events.length === 0 && (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-slate-300">
-              <p>No events yet.</p>
+            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5 px-8 py-16 text-center">
+              <EmptyStateIllustration className="mb-4 h-28 w-28" variant="events" />
+              <p className="text-lg text-slate-300">No events yet</p>
+              <p className="mt-1 text-sm text-slate-500">Create your first cinematic book launch</p>
               <Link href="/create-event">
-                <Button className="mt-4">Create Your First Event</Button>
+                <Button className="mt-6">Create Your First Event</Button>
               </Link>
             </div>
           )}
