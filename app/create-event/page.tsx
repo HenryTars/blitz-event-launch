@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import InvitationGenerator from '@/components/InvitationGenerator';
+import ImageUpload from '@/components/ImageUpload';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 type FormData = {
@@ -277,19 +278,12 @@ export default function CreateEventPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-white">Hero Image URL</label>
-              <input
-                type="url"
-                value={formData.heroImageUrl}
-                onChange={(e) => updateField('heroImageUrl', e.target.value)}
-                className={inputClass('heroImageUrl')}
-                placeholder="https://example.com/launch-room.jpg"
-              />
-              {fieldError('heroImageUrl') && (
-                <p className="mt-2 text-sm text-red-300">{fieldError('heroImageUrl')}</p>
-              )}
-            </div>
+            <ImageUpload
+              currentUrl={formData.heroImageUrl}
+              folder="hero"
+              label="Hero Image"
+              onChange={(url) => updateField('heroImageUrl', url)}
+            />
           </section>
 
           <section className="space-y-5 border-t border-white/10 pt-8">
@@ -357,19 +351,12 @@ export default function CreateEventPage() {
                 )}
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-white">Book Cover URL</label>
-              <input
-                type="url"
-                value={formData.bookCoverUrl}
-                onChange={(e) => updateField('bookCoverUrl', e.target.value)}
-                className={inputClass('bookCoverUrl')}
-                placeholder="https://example.com/book-cover.jpg"
-              />
-              {fieldError('bookCoverUrl') && (
-                <p className="mt-2 text-sm text-red-300">{fieldError('bookCoverUrl')}</p>
-              )}
-            </div>
+            <ImageUpload
+              currentUrl={formData.bookCoverUrl}
+              folder="covers"
+              label="Book Cover"
+              onChange={(url) => updateField('bookCoverUrl', url)}
+            />
             <div>
               <label className="block text-sm font-medium mb-2 text-white">Book Description</label>
               <textarea

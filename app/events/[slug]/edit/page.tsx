@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Save, Eye, EyeOff, ArrowLeft, Image, Sparkles, Loader2 } from 'lucide-react';
+import { Save, Eye, EyeOff, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 interface EventData {
   id: string;
@@ -287,14 +288,12 @@ export default function EditEventPage() {
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-gold/40 focus:outline-none transition [color-scheme:dark]" />
                   </div>
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Hero Image URL</label>
-                  <div className="relative">
-                    <Image className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                    <input value={form.heroImageUrl} onChange={(e) => setForm(f => ({ ...f, heroImageUrl: e.target.value }))} placeholder="https://..."
-                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 focus:border-gold/40 focus:outline-none transition" />
-                  </div>
-                </div>
+                <ImageUpload
+                  currentUrl={form.heroImageUrl}
+                  folder="hero"
+                  label="Hero Image"
+                  onChange={(url) => setForm(f => ({ ...f, heroImageUrl: url }))}
+                />
               </div>
             </section>
           </div>
@@ -320,14 +319,12 @@ export default function EditEventPage() {
                   <input value={book.subtitle} onChange={(e) => setBook(b => ({ ...b, subtitle: e.target.value }))}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-gold/40 focus:outline-none transition" />
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Cover URL</label>
-                  <div className="relative">
-                    <Image className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                    <input value={book.coverUrl} onChange={(e) => setBook(b => ({ ...b, coverUrl: e.target.value }))} placeholder="https://..."
-                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 focus:border-gold/40 focus:outline-none transition" />
-                  </div>
-                </div>
+                <ImageUpload
+                  currentUrl={book.coverUrl}
+                  folder="covers"
+                  label="Book Cover"
+                  onChange={(url) => setBook(b => ({ ...b, coverUrl: url }))}
+                />
                 <div>
                   <label className="mb-1.5 block text-xs text-slate-400">Description</label>
                   <textarea value={book.description} onChange={(e) => setBook(b => ({ ...b, description: e.target.value }))} rows={3}
