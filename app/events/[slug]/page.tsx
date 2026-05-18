@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import EventDetailsClient from '@/components/EventDetailsClient';
+import { getEventLifecycle } from '@/lib/event-lifecycle';
 
 export default async function Page({ params }: { params: Promise<{ slug?: string | string[] }> }) {
   const resolvedParams = await params;
@@ -44,6 +45,7 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
     <EventDetailsClient
       slug={slug}
       isOrganizer={isOrganizer}
+      lifecycle={getEventLifecycle(event.startAt, event.endAt)}
       event={{
         title: event.title,
         description: event.description,

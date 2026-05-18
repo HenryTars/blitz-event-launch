@@ -5,6 +5,7 @@ import { Client } from 'pg';
 import { createId } from '@paralleldrive/cuid2';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit';
+import { getEventLifecycle } from '@/lib/event-lifecycle';
 
 const createSlug = (title: string) =>
   title
@@ -15,7 +16,7 @@ const createSlug = (title: string) =>
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      where: { status: 'PUBLISHED', deleted: false, startAt: { gte: new Date() } },
+      where: { status: 'PUBLISHED', deleted: false },
       include: {
         books: true,
         author: { select: { name: true } },
@@ -24,28 +25,35 @@ export async function GET() {
       orderBy: { startAt: 'asc' }
     });
 
-    const formatted = events.map((event) => ({
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      slug: event.slug,
-      venue: event.venue,
-      startAt: event.startAt,
-      endAt: event.endAt,
-      heroImageUrl: event.heroImageUrl,
-      theme: event.theme,
-      featured: event.featured,
-      authorName: event.author.name,
-      book: event.books[0]
-        ? {
-            title: event.books[0].title,
-            author: event.books[0].author,
-            coverUrl: event.books[0].coverUrl
-          }
-        : null,
-      attendanceCount: event.analytics?.attendanceCount ?? 0,
-      totalInvites: event.analytics?.totalInvites ?? 0
-    }));
+    // Filter out permanently ended events, add lifecycle state
+    const formatted = events
+      .filter((event) => {
+        const lifecycle = getEventLifecycle(event.startAt, event.endAt);
+        return lifecycle !== 'ENDED';
+      })
+      .map((event) => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        slug: event.slug,
+        venue: event.venue,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        heroImageUrl: event.heroImageUrl,
+        theme: event.theme,
+        featured: event.featured,
+        lifecycle: getEventLifecycle(event.startAt, event.endAt),
+        authorName: event.author.name,
+        book: event.books[0]
+          ? {
+              title: event.books[0].title,
+              author: event.books[0].author,
+              coverUrl: event.books[0].coverUrl
+            }
+          : null,
+        attendanceCount: event.analytics?.attendanceCount ?? 0,
+        totalInvites: event.analytics?.totalInvites ?? 0
+      }));
 
     return NextResponse.json({ events: formatted });
   } catch (error) {

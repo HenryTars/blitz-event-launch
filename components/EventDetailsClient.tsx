@@ -20,7 +20,8 @@ import {
   User,
   Send,
   Check,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 
 interface BookInfo {
@@ -43,6 +44,7 @@ interface EventDetailsClientProps {
     authorEmail: string;
     book: BookInfo;
   };
+  lifecycle?: string;
   analytics?: {
     totalInvites: number;
     acceptedCount: number;
@@ -70,6 +72,7 @@ const themeCopy: Record<string, { label: string; quote: string }> = {
 
 export default function EventDetailsClient({
   event,
+  lifecycle,
   analytics,
   isOrganizer = false,
   slug
@@ -170,10 +173,24 @@ export default function EventDetailsClient({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-gold backdrop-blur-sm"
+              className="mb-6 flex flex-wrap items-center gap-3"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              {theme.label}
+              <span className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-gold backdrop-blur-sm">
+                <Sparkles className="h-3.5 w-3.5" />
+                {theme.label}
+              </span>
+              {lifecycle === 'TODAY' && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-amber-300 backdrop-blur-sm">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Happening Today
+                </span>
+              )}
+              {lifecycle === 'LIVE_NOW' && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300 backdrop-blur-sm">
+                  <Zap className="h-3.5 w-3.5 animate-pulse" />
+                  Live Now at {event.venue || 'Venue'}
+                </span>
+              )}
             </motion.div>
 
             <h1 className="text-display-lg font-serif text-white text-shadow-subtle">

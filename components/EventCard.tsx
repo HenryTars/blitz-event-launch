@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Sparkles, Zap } from 'lucide-react';
 
 interface EventCardProps {
   event: {
@@ -15,6 +15,7 @@ interface EventCardProps {
     startAt: string | Date;
     heroImageUrl?: string | null;
     theme: string;
+    lifecycle?: string;
     featured?: boolean | null;
     authorName?: string | null;
     book?: { title: string; author: string; coverUrl?: string | null } | null;
@@ -64,9 +65,28 @@ export default function EventCard({ event, index = 0, featured = false }: EventC
             {event.theme}
           </div>
 
+          {/* Lifecycle badge (Today / Live Now) */}
+          {event.lifecycle === 'TODAY' && (
+            <div className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-amber-500/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink backdrop-blur-sm">
+              <Sparkles className="h-3 w-3" />
+              Today
+            </div>
+          )}
+          {event.lifecycle === 'LIVE_NOW' && (
+            <div className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-emerald-500/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink backdrop-blur-sm">
+              <Zap className="h-3 w-3 animate-pulse" />
+              Live Now
+            </div>
+          )}
+
           {/* Featured badge */}
-          {featured && (
+          {featured && event.lifecycle !== 'TODAY' && event.lifecycle !== 'LIVE_NOW' && (
             <div className="absolute right-4 top-4 rounded-full bg-gold/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink backdrop-blur-sm">
+              Featured
+            </div>
+          )}
+          {featured && (event.lifecycle === 'TODAY' || event.lifecycle === 'LIVE_NOW') && (
+            <div className="absolute right-4 top-16 rounded-full bg-gold/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink backdrop-blur-sm">
               Featured
             </div>
           )}
