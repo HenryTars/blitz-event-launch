@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Search, Calendar, Star, Trash2, RefreshCw, CheckCircle, XCircle, Clock, Archive, Eye } from 'lucide-react';
+import { Search, Calendar, Star, Trash2, RefreshCw, CheckCircle, XCircle, Clock, Archive, Eye, Edit3 } from 'lucide-react';
 
 interface AdminEvent {
   id: string;
@@ -211,6 +211,10 @@ export default function AdminEventsPage() {
                         className={`rounded px-2 py-1 text-xs transition hover:bg-white/5 ${event.featured ? 'text-gold' : 'text-slate-400'}`} title={event.featured ? 'Unfeature' : 'Feature'}>
                         <Star className="h-4 w-4" />
                       </button>
+                      <Link href={`/events/${event.slug}/edit`}
+                        className="rounded px-2 py-1 text-xs text-sky-400 transition hover:bg-sky-500/10" title="Edit event details">
+                        <Edit3 className="h-4 w-4" />
+                      </Link>
                       <button onClick={() => { if (confirm('Archive this event?')) changeStatus(event.id, 'ARCHIVED'); }} disabled={actionLoading === event.id}
                         className="rounded px-2 py-1 text-xs text-red-400 transition hover:bg-red-500/10" title="Archive">
                         <Trash2 className="h-4 w-4" />
