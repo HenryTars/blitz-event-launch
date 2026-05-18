@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -10,7 +11,8 @@ import {
   Settings,
   Shield,
   ChevronLeft,
-  Sparkles
+  Menu,
+  X
 } from 'lucide-react';
 
 const navItems = [
@@ -23,10 +25,33 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => { setIsOpen(false); }, [pathname]);
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-white/5 bg-[#0a0a0f]">
-      <div className="flex h-full flex-col">
+    <>
+      {/* Mobile hamburger */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#0a0a0f] text-slate-400 transition hover:text-white lg:hidden"
+        aria-label="Toggle navigation"
+      >
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-white/5 bg-[#0a0a0f] transition-transform duration-300 lg:translate-x-0 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         {/* Brand */}
         <div className="flex items-center gap-3 border-b border-white/5 px-6 py-5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/20">
@@ -39,7 +64,7 @@ export default function AdminSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3 py-6">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
           {navItems.map((item) => {
             const isActive = item.href === '/admin'
               ? pathname === '/admin'
@@ -71,7 +96,7 @@ export default function AdminSidebar() {
             Back to site
           </Link>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

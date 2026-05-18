@@ -64,9 +64,9 @@ export default function EditEventPage() {
       try {
         const res = await fetch(`/api/events/${slug}`);
         const data = await res.json();
-        if (res.ok && data.event) {
-          setEvent(data.event);
-          const e = data.event;
+        if (res.ok) {
+          setEvent(data);
+          const e = data;
           setForm({
             title: e.title || '',
             description: e.description || '',
