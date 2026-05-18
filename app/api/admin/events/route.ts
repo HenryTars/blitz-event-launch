@@ -5,7 +5,7 @@ import { createAuditLog } from '@/lib/audit';
 import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (!auth.user) return auth.errorResponse!;
 
   const { searchParams } = new URL(request.url);
@@ -52,7 +52,7 @@ const validStatusTransitions: Record<string, string[]> = {
 };
 
 export async function PATCH(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (!auth.user) return auth.errorResponse!;
 
   const body = await request.json();

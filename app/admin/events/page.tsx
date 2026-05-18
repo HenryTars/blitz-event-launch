@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Search, Calendar, Star, Trash2, RefreshCw, CheckCircle, XCircle, Clock, Archive, Eye, Edit3 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface AdminEvent {
   id: string;
@@ -47,7 +48,7 @@ export default function AdminEventsPage() {
     params.set('page', page.toString());
     params.set('limit', limit.toString());
 
-    const res = await fetch(`/api/admin/events?${params}`);
+    const res = await authFetch(`/api/admin/events?${params}`);
     const data = await res.json();
     if (res.ok) {
       setEvents(data.events);
@@ -62,7 +63,7 @@ export default function AdminEventsPage() {
     setActionLoading(eventId);
     setMessage('');
     try {
-      const res = await fetch('/api/admin/events', {
+      const res = await authFetch('/api/admin/events', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, status: newStatus, reason }),

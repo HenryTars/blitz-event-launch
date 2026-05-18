@@ -2,27 +2,42 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import type { UserRole } from '@prisma/client';
+import type { NextRequest } from 'next/server';
 
 export type { UserRole };
 
-export async function getCurrentUser() {
+export async function getCurrentUser(authToken?: string) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) return null;
+  let email: string | undefined;
+  if (authToken) {
+    const { data } = await supabase.auth.getUser(authToken);
+    email = data.user?.email?.toLowerCase();
+  } else {
+    const { data } = await supabase.auth.getUser();
+    email = data.user?.email?.toLowerCase();
+  }
+
+  if (!email) return null;
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: user.email.toLowerCase() }
+    where: { email }
   });
 
   if (!dbUser) return null;
 
   return {
     ...dbUser,
-    authId: user.id,
-    email: user.email.toLowerCase()
+    authId: '',
+    email
   };
+}
+
+export async function getCurrentUserFromRequest(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+  return getCurrentUser(token);
 }
 
 export function hasRole(user: { role: string } | null, ...roles: UserRole[]): boolean {
@@ -38,8 +53,12 @@ export function isOrganizer(user: { role: string } | null): boolean {
   return hasRole(user, 'ORGANIZER', 'SUPER_ADMIN');
 }
 
-export async function requireRole(...roles: UserRole[]) {
-  const user = await getCurrentUser();
+export async function requireRole(reqOrToken: NextRequest | string | undefined, ...roles: UserRole[]) {
+  const user = typeof reqOrToken === 'string'
+    ? await getCurrentUser(reqOrToken)
+    : reqOrToken instanceof Request
+      ? await getCurrentUserFromRequest(reqOrToken)
+      : await getCurrentUser();
   if (!user) {
     return {
       user: null as null,
@@ -55,12 +74,12 @@ export async function requireRole(...roles: UserRole[]) {
   return { user, errorResponse: null as null };
 }
 
-export async function requireAdmin() {
-  return requireRole('SUPER_ADMIN');
+export async function requireAdmin(reqOrToken?: NextRequest | string) {
+  return requireRole(reqOrToken, 'SUPER_ADMIN');
 }
 
-export async function requireOrganizer() {
-  return requireRole('ORGANIZER', 'SUPER_ADMIN');
+export async function requireOrganizer(reqOrToken?: NextRequest | string) {
+  return requireRole(reqOrToken, 'ORGANIZER', 'SUPER_ADMIN');
 }
 
 export function isEventOwner(event: { authorId: string }, user: { id: string } | null): boolean {

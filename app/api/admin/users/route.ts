@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (!auth.user) return auth.errorResponse!;
 
   const { searchParams } = new URL(request.url);
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (!auth.user) return auth.errorResponse!;
 
   const body = await request.json();

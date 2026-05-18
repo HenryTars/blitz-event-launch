@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/rbac';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (!auth.user) return auth.errorResponse!;
 
   const { searchParams } = new URL(request.url);

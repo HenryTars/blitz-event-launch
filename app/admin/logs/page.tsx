@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Clock, RefreshCw, Filter } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface AuditLogEntry {
   id: string;
@@ -31,7 +32,7 @@ export default function AdminLogsPage() {
     params.set('page', page.toString());
     params.set('limit', limit.toString());
 
-    const res = await fetch(`/api/admin/logs?${params}`);
+    const res = await authFetch(`/api/admin/logs?${params}`);
     const data = await res.json();
     if (res.ok) {
       setLogs(data.logs);

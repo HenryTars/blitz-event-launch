@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Search, Shield, UserX, UserCheck, ArrowUp, ArrowDown, MoreHorizontal, RefreshCw, Users } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface AdminUser {
   id: string;
@@ -37,7 +38,7 @@ export default function AdminUsersPage() {
     params.set('page', page.toString());
     params.set('limit', limit.toString());
 
-    const res = await fetch(`/api/admin/users?${params}`);
+    const res = await authFetch(`/api/admin/users?${params}`);
     const data = await res.json();
     if (res.ok) {
       setUsers(data.users);
@@ -52,7 +53,7 @@ export default function AdminUsersPage() {
     setActionLoading(userId);
     setMessage('');
     try {
-      const res = await fetch('/api/admin/users', {
+      const res = await authFetch('/api/admin/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, action, ...extra }),
