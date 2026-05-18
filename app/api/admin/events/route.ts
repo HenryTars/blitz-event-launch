@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/rbac';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin();
@@ -95,6 +96,28 @@ export async function PATCH(request: NextRequest) {
       userId: auth.user.id,
       metadata: { previousStatus: event.status, newStatus: targetStatus, reason },
     });
+
+    // Notify event owner
+    if (targetStatus === 'PUBLISHED') {
+      await createNotification({
+        userId: event.authorId,
+        type: 'approval',
+        title: 'Event Approved',
+        message: `Your event "${event.title}" has been approved and is now live.`,
+        link: `/events/${event.slug}/dashboard`
+      });
+    } else if (targetStatus === 'REJECTED') {
+      await createNotification({
+        userId: event.authorId,
+        type: 'rejection',
+        title: 'Event Not Approved',
+        message: reason
+          ? `Your event "${event.title}" was not approved: ${reason}`
+          : `Your event "${event.title}" was not approved.`,
+        link: `/events/${event.slug}/edit`
+      });
+    }
+
     return NextResponse.json({ success: true, status: targetStatus, message: `Event ${targetStatus.toLowerCase()}` });
   }
 

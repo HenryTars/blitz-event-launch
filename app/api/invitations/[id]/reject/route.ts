@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser, isAdmin, isEventOwner } from '@/lib/rbac';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,6 +36,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         reviewNotes: reason || null
       }
     });
+
+    // Notify the invited guest
+    if (invitation.email) {
+      const guestUser = await prisma.user.findUnique({ where: { email: invitation.email } });
+      if (guestUser) {
+        await createNotification({
+          userId: guestUser.id,
+          type: 'rejection',
+          title: 'Invitation Declined',
+          message: reason
+            ? `Your invitation to ${invitation.event.title} was declined: ${reason}`
+            : `Your invitation to ${invitation.event.title} was declined.`,
+          link: `/invite/${invitation.token}`
+        });
+      }
+    }
 
     return NextResponse.json({ message: 'Invitation rejected.' });
   } catch (error) {

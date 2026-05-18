@@ -184,6 +184,23 @@ model AdminAction {
   @@index([createdAt])
 }
 
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   @default("info")
+  title     String
+  message   String?
+  link      String?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+}
+
 model SystemSettings {
   id        String   @id @default(cuid())
   key       String   @unique

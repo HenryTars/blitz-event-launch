@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rsvpStatusSchema } from '@/lib/validation/invitation';
+import { createNotificationForEventOwner } from '@/lib/notifications';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -36,7 +37,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ token:
   const status = parsedStatus.data;
 
   const invitation = await prisma.invitation.findUnique({
-    where: { token }
+    where: { token },
+    include: { event: { select: { id: true, slug: true, title: true } } }
   });
 
   if (!invitation) {
@@ -78,6 +80,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ token:
     });
 
     return updated;
+  });
+
+  // Notify the event owner
+  const statusLabel = status === 'ACCEPTED' ? 'accepted' : status === 'DECLINED' ? 'declined' : 'maybe';
+  await createNotificationForEventOwner(invitation.eventId, {
+    type: 'rsvp',
+    title: `${invitation.guestName} ${statusLabel} your invitation`,
+    message: `${invitation.guestName} has ${statusLabel} the invitation to ${invitation.event.title}.`,
+    link: `/events/${invitation.event.slug}/dashboard`
   });
 
   return NextResponse.json({ status: updatedInvitation.status });
