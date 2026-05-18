@@ -50,13 +50,11 @@ export default function Header() {
     let cancelled = false;
 
     const checkAuth = async () => {
-      // 1. Check Supabase browser client first (local, instant)
       const supabase = createSupabaseBrowserClient();
       if (supabase) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email && !cancelled) {
           const email = user.email.toLowerCase();
-          // Try to get role from API (fast path: role only)
           try {
             const ctrl = new AbortController();
             const timer = setTimeout(() => ctrl.abort(), 3000);
@@ -70,18 +68,28 @@ export default function Header() {
                 return;
               }
             }
-          } catch { /* fallback below */ }
-          // Fallback: assume USER role
-          if (!cancelled) {
-            setAuthUser({ email, role: 'USER' });
-          }
+          } catch { /* fallback */ }
+          if (!cancelled) setAuthUser({ email, role: 'USER' });
         }
       }
       if (!cancelled) setAuthChecking(false);
     };
 
     checkAuth();
-    return () => { cancelled = true; };
+
+    // Listen for auth state changes (sign in/out)
+    const supabase = createSupabaseBrowserClient();
+    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        setAuthChecking(true);
+        checkAuth();
+      }
+    }) ?? { data: { subscription: null } };
+
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, [pathname]);
 
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);

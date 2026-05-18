@@ -1,15 +1,40 @@
-import { NextResponse } from 'next/server';
-import { requireAuthenticatedUser } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export const maxDuration = 30;
+
+export async function GET(req: NextRequest) {
   try {
-    const auth = await requireAuthenticatedUser();
-    if (!auth.user) return auth.errorResponse!;
+    // Use Authorization header token if available (more reliable than cookies in API routes)
+    const authHeader = req.headers.get('authorization');
+    let email: string | undefined;
 
-    const user = auth.user.dbUser;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      const supabase = await createSupabaseServerClient();
+      if (supabase) {
+        const { data } = await supabase.auth.getUser(token);
+        email = data.user?.email?.toLowerCase();
+      }
+    } else {
+      const supabase = await createSupabaseServerClient();
+      if (!supabase) {
+        return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+      }
+      const { data } = await supabase.auth.getUser();
+      email = data.user?.email?.toLowerCase();
+    }
 
-    // Get events with books and analytics
+    if (!email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return NextResponse.json({ organizer: { email }, events: [] });
+    }
+
     const events = await prisma.event.findMany({
       where: { authorId: user.id },
       include: {

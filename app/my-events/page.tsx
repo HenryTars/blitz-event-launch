@@ -34,35 +34,60 @@ export default function MyEventsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
     const init = async () => {
       try {
         const supabase = createSupabaseBrowserClient();
         if (!supabase) { throw new Error('Supabase not configured'); }
-        const { data } = await supabase.auth.getUser();
-        if (!data.user?.email) {
-          setError('Please sign in to view your events.');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!session?.user?.email) {
+          // Try getUser as fallback
+          const { data } = await supabase.auth.getUser();
+          if (cancelled) return;
+          if (!data.user?.email) {
+            setError('Please sign in to view your events.');
+            setLoading(false);
+            return;
+          }
+          setEmail(data.user.email);
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 10000);
+          const response = await fetch('/api/events/mine', { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (cancelled) return;
+          const payload = await response.json();
+          if (!response.ok) { setError(payload.error || 'Failed to load events.'); setLoading(false); return; }
+          setEvents(payload.events ?? []);
           setLoading(false);
           return;
         }
-        setEmail(data.user.email);
+        setEmail(session.user.email);
 
-        const response = await fetch('/api/events/mine');
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 10000);
+        const response = await fetch('/api/events/mine', {
+          signal: ctrl.signal,
+          headers: { authorization: `Bearer ${session.access_token}` }
+        });
+        clearTimeout(timer);
+        if (cancelled) return;
         const payload = await response.json();
-        if (!response.ok) {
-          setError(payload.error || 'Failed to load events.');
-          setLoading(false);
-          return;
-        }
+        if (!response.ok) { setError(payload.error || 'Failed to load events.'); setLoading(false); return; }
         setEvents(payload.events ?? []);
         setLoading(false);
-      } catch (err) {
-        console.error('Error loading events:', err);
-        setError('Unable to connect to database. Please try again later.');
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          setError('Request timed out. Database connection may be slow.');
+        } else {
+          setError('Unable to connect to database. Please try again later.');
+        }
         setLoading(false);
       }
     };
 
     init();
+    return () => { cancelled = true; };
   }, []);
 
   const totals = events.reduce(
