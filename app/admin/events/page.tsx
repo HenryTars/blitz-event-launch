@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Search, Calendar, Star, Trash2, RefreshCw, CheckCircle, XCircle, Clock, Archive, Eye, Edit3 } from 'lucide-react';
-import { EmptyStateIllustration } from '@/components/illustrations';
 
 interface AdminEvent {
   id: string;
@@ -143,12 +142,7 @@ export default function AdminEventsPage() {
             {loading ? (
               <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-500">Loading...</td></tr>
             ) : events.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-500">
-                <div className="flex flex-col items-center justify-center">
-                  <EmptyStateIllustration className="mb-4 h-24 w-24" variant="events" />
-                  <p>No events found</p>
-                </div>
-              </td></tr>
+              <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-500">No events found</td></tr>
             ) : events.map((event) => {
               const cfg = statusConfig[event.status] || statusConfig.DRAFT;
               const StatusIcon = cfg.icon;

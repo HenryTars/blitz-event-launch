@@ -137,28 +137,6 @@ export default function InvitationPage({ token, shortCode, guestName, status, in
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(197,165,123,0.12),transparent)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_20%,rgba(123,119,255,0.04),transparent)]" />
         <div className="absolute left-1/4 top-1/3 h-64 w-64 rounded-full bg-gold/5 blur-[120px] animate-float" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-          <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full max-h-[60vh]">
-            <circle cx="200" cy="150" r="80" fill="url(#inviteGlow)" opacity="0.3" />
-            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
-              const rad = (angle * Math.PI) / 180;
-              return (
-                <line key={i} x1={200 + 30 * Math.cos(rad)} y1={150 + 30 * Math.sin(rad)} x2={200 + 80 * Math.cos(rad)} y2={150 + 80 * Math.sin(rad)} stroke="#c5a57b" strokeWidth="0.8" opacity="0.15" />
-              );
-            })}
-            <circle cx="120" cy="60" r="2" fill="#e5d3b8" opacity="0.25" />
-            <circle cx="290" cy="50" r="2.5" fill="#e5d3b8" opacity="0.2" />
-            <circle cx="340" cy="200" r="2" fill="#e5d3b8" opacity="0.15" />
-            <circle cx="60" cy="220" r="1.5" fill="#e5d3b8" opacity="0.2" />
-            <circle cx="80" cy="100" r="1.5" fill="#e5d3b8" opacity="0.15" />
-            <defs>
-              <radialGradient id="inviteGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#c5a57b" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#c5a57b" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-          </svg>
-        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#09070b]/20 to-[#09070b]" />
 
         <div className="relative mx-auto max-w-4xl px-6 py-24 lg:px-8 text-center">

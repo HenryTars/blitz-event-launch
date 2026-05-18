@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, BookOpen } from 'lucide-react';
 import EventCard from '@/components/EventCard';
-import { HeroIllustration, PatternDivider, LiteraryIllustration } from '@/components/illustrations';
 
 interface EventData {
   id: string;
@@ -68,11 +67,6 @@ export default function HomePage() {
           <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#09070b] to-transparent" />
         </div>
 
-        {/* Hero illustration */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-60">
-          <HeroIllustration className="h-full w-full max-h-[90vh]" />
-        </div>
-
         {/* Floating orbs */}
         <div className="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-gold/5 blur-[120px] animate-float" />
         <div className="absolute right-1/4 bottom-1/3 h-48 w-48 rounded-full bg-purple-500/5 blur-[100px] animate-float-slow" />
@@ -128,9 +122,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Section divider */}
-      <PatternDivider className="relative -mt-1 h-12 w-full" />
-
       {/* ─── Events Section ─── */}
       <section id="events" className="px-6 pb-section">
         <div className="mx-auto max-w-6xl">
@@ -163,11 +154,9 @@ export default function HomePage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 px-6 py-20 text-center"
+              className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-6 py-20 text-center"
             >
-              <LiteraryIllustration className="absolute inset-0 h-full w-full opacity-40" variant="book" />
-              <div className="relative z-10">
-                <BookOpen className="mx-auto mb-4 h-12 w-12 text-gold/40" />
+              <BookOpen className="mb-4 h-12 w-12 text-gold/40" />
               <h3 className="font-serif text-2xl font-semibold text-white">
                 No upcoming events yet
               </h3>
@@ -180,7 +169,6 @@ export default function HomePage() {
               >
                 Create your first event
               </Link>
-              </div>
             </motion.div>
           ) : (
             <>

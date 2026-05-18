@@ -153,18 +153,6 @@ export default function EventDetailsClient({
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(197,165,123,0.20),transparent_34%),linear-gradient(135deg,#120d17_0%,#050407_55%,#17120d_100%)]" />
         )}
-        {/* Illustration overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-          <svg viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
-            <path d="M100 350 C150 200, 250 300, 300 150 C350 0, 450 100, 550 50 C650 0, 700 150, 750 100" stroke="#c5a57b" strokeWidth="1.5" fill="none" opacity="0.2" />
-            <path d="M150 380 C200 250, 300 320, 350 200 C400 80, 500 150, 600 100" stroke="#c5a57b" strokeWidth="1" fill="none" opacity="0.12" />
-            <circle cx="300" cy="150" r="3" fill="#e5d3b8" opacity="0.2" />
-            <circle cx="550" cy="50" r="2" fill="#e5d3b8" opacity="0.15" />
-            <circle cx="450" cy="280" r="2.5" fill="#e5d3b8" opacity="0.15" />
-            <circle cx="200" cy="300" r="2" fill="#e5d3b8" opacity="0.1" />
-          </svg>
-        </div>
-
         {/* Floating orbs */}
         <div className="absolute left-1/3 top-1/4 h-72 w-72 rounded-full bg-gold/5 blur-[140px] animate-float" />
         <div className="absolute right-1/4 bottom-1/4 h-56 w-56 rounded-full bg-purple-500/5 blur-[120px] animate-float-slow" />
