@@ -47,30 +47,41 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
-      try {
-        // Try lightweight endpoint first
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) {
-            setAuthUser({ email: data.user.email, role: data.user.role });
+      // 1. Check Supabase browser client first (local, instant)
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email && !cancelled) {
+          const email = user.email.toLowerCase();
+          // Try to get role from API (fast path: role only)
+          try {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 3000);
+            const res = await fetch('/api/auth/me', { signal: ctrl.signal });
+            clearTimeout(timer);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.user && !cancelled) {
+                setAuthUser({ email: data.user.email, role: data.user.role });
+                setAuthChecking(false);
+                return;
+              }
+            }
+          } catch { /* fallback below */ }
+          // Fallback: assume USER role
+          if (!cancelled) {
+            setAuthUser({ email, role: 'USER' });
           }
         }
-      } catch {
-        // fallback: use Supabase directly
-        const supabase = createSupabaseBrowserClient();
-        if (supabase) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.email) {
-            setAuthUser({ email: user.email.toLowerCase(), role: 'USER' });
-          }
-        }
-      } finally {
-        setAuthChecking(false);
       }
+      if (!cancelled) setAuthChecking(false);
     };
+
     checkAuth();
+    return () => { cancelled = true; };
   }, [pathname]);
 
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
