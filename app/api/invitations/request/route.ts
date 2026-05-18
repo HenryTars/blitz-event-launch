@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getInviteLink } from '@/lib/url';
 import { generateShortCode } from '@/lib/shortcode';
+import { getCurrentUser, isAdmin, isEventOwner } from '@/lib/rbac';
 
 function createToken(eventId: string, guestName: string) {
   const raw = `${eventId}|${guestName}|${Date.now()}|${crypto.randomUUID()}`;
@@ -45,14 +46,18 @@ export async function POST(req: Request) {
         shortCode: existing.shortCode,
         guestName: existing.guestName,
         inviteLink: getInviteLink(existing.token),
-        duplicated: true
+        duplicated: true,
+        isApproved: existing.isApproved
       });
     }
+
+    // Auto-approve if the requester is the event owner or an admin
+    const currentUser = await getCurrentUser();
+    const shouldAutoApprove = !!(currentUser && (isAdmin(currentUser) || isEventOwner(event, currentUser)));
 
     const token = createToken(event.id, guestName);
     let shortCode = generateShortCode();
 
-    // Ensure unique shortCode
     let attempts = 0;
     while (await prisma.invitation.findUnique({ where: { shortCode } })) {
       shortCode = generateShortCode();
@@ -68,7 +73,10 @@ export async function POST(req: Request) {
           email: normalizedEmail,
           phone: phone ?? '',
           token,
-          shortCode
+          shortCode,
+          isApproved: shouldAutoApprove,
+          reviewedAt: shouldAutoApprove ? new Date() : null,
+          reviewedBy: shouldAutoApprove ? currentUser!.id : null
         }
       });
 
@@ -93,6 +101,7 @@ export async function POST(req: Request) {
       shortCode: invitation.shortCode,
       guestName: invitation.guestName,
       inviteLink: getInviteLink(invitation.token),
+      isApproved: invitation.isApproved,
       duplicated: false
     });
   } catch (error) {

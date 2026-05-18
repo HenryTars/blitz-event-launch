@@ -29,6 +29,7 @@ export async function GET(
         guestEmail: inv.email,
         token: inv.token,
         status: inv.status,
+        isApproved: inv.isApproved,
         createdAt: inv.createdAt
       }))
     );

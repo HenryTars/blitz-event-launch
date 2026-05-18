@@ -98,6 +98,10 @@ model Invitation {
   token         String     @unique
   shortCode     String     @unique @default("")
   status        String     @default("PENDING")
+  isApproved    Boolean    @default(false)
+  reviewedAt    DateTime?
+  reviewedBy    String?
+  reviewNotes   String?
   rsvpAt        DateTime?
   createdBy     String?
   createdAt     DateTime   @default(now())
@@ -108,6 +112,7 @@ model Invitation {
 
   @@index([eventId])
   @@index([status])
+  @@index([isApproved])
   @@index([shortCode])
 }
 

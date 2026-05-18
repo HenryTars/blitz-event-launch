@@ -33,6 +33,7 @@ export default async function Page({ params }: { params: Promise<{ token?: strin
       token={token}
       shortCode={invitation.shortCode || undefined}
       guestName={invitation.guestName}
+      isApproved={invitation.isApproved}
       status={invitation.status as 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LATER'}
       initialPreorderQuantity={invitation.preorder?.quantity ?? 0}
       event={{

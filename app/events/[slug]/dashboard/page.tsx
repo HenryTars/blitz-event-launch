@@ -15,6 +15,15 @@ interface Guest {
   guestEmail?: string;
   token: string;
   status: 'ACCEPTED' | 'DECLINED' | 'LATER' | 'PENDING';
+  isApproved: boolean;
+  createdAt: string;
+}
+
+interface PendingRequest {
+  id: string;
+  guestName: string;
+  email: string | null;
+  phone: string | null;
   createdAt: string;
 }
 
@@ -39,6 +48,7 @@ export default function EventDashboard() {
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [error, setError] = useState('');
   const [showQR, setShowQR] = useState(false);
   const [busyGuestId, setBusyGuestId] = useState('');
@@ -55,6 +65,12 @@ export default function EventDashboard() {
       if (guestsResponse.ok) {
         const guestsData = await guestsResponse.json();
         setGuests(guestsData);
+      }
+
+      const pendingResponse = await fetch(`/api/invitations/pending?eventSlug=${slug}`);
+      if (pendingResponse.ok) {
+        const pendingData = await pendingResponse.json();
+        setPendingRequests(pendingData.pending);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load event data');
@@ -90,6 +106,44 @@ export default function EventDashboard() {
         return <Clock size={16} />;
       default:
         return <Users size={16} />;
+    }
+  };
+
+  const approveRequest = async (id: string) => {
+    try {
+      setBusyGuestId(id);
+      const response = await fetch(`/api/invitations/${id}/approve`, { method: 'POST' });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to approve');
+      }
+      setPendingRequests((current) => current.filter((r) => r.id !== id));
+      await fetchEventData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to approve request');
+    } finally {
+      setBusyGuestId('');
+    }
+  };
+
+  const rejectRequest = async (id: string) => {
+    const reason = window.prompt('Reason for rejection (optional):');
+    try {
+      setBusyGuestId(id);
+      const response = await fetch(`/api/invitations/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason || undefined })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to reject');
+      }
+      setPendingRequests((current) => current.filter((r) => r.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reject request');
+    } finally {
+      setBusyGuestId('');
     }
   };
 
@@ -173,14 +227,15 @@ export default function EventDashboard() {
     );
   }
 
+  const approvedGuests = guests.filter((g) => g.isApproved);
   const stats = eventData.analytics ?? {
-    totalInvites: guests.length,
-    acceptedCount: guests.filter((guest) => guest.status === 'ACCEPTED').length,
-    declinedCount: guests.filter((guest) => guest.status === 'DECLINED').length,
+    totalInvites: approvedGuests.length,
+    acceptedCount: approvedGuests.filter((guest) => guest.status === 'ACCEPTED').length,
+    declinedCount: approvedGuests.filter((guest) => guest.status === 'DECLINED').length,
     preorderCount: 0,
     attendanceCount: 0
   };
-  const laterCount = guests.filter((guest) => guest.status === 'LATER').length;
+  const laterCount = approvedGuests.filter((guest) => guest.status === 'LATER').length;
   const totalRsvps = stats.acceptedCount + stats.declinedCount + laterCount;
 
   return (
@@ -241,6 +296,50 @@ export default function EventDashboard() {
               Display this QR code at your event entrance. Guests can scan it with their phone camera to check in.
             </p>
             <QRCodeComponent eventSlug={slug} size={300} />
+          </motion.div>
+        )}
+
+        {pendingRequests.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-amber-500/5 backdrop-blur-sm rounded-2xl p-8 border border-amber-500/20 mb-8">
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2 text-amber-200">
+              <Clock size={24} />
+              Pending Approval ({pendingRequests.length})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-amber-500/10">
+                    <th className="text-left py-3 px-4 text-amber-300/70 font-medium">Name</th>
+                    <th className="text-left py-3 px-4 text-amber-300/70 font-medium">Email</th>
+                    <th className="text-left py-3 px-4 text-amber-300/70 font-medium">Phone</th>
+                    <th className="text-left py-3 px-4 text-amber-300/70 font-medium">Requested</th>
+                    <th className="text-right py-3 px-4 text-amber-300/70 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingRequests.map((req) => (
+                    <tr key={req.id} className="border-b border-amber-500/5 hover:bg-amber-500/5 transition">
+                      <td className="py-3 px-4 font-medium">{req.guestName}</td>
+                      <td className="py-3 px-4 text-slate-400">{req.email || '-'}</td>
+                      <td className="py-3 px-4 text-slate-400">{req.phone || '-'}</td>
+                      <td className="py-3 px-4 text-slate-400 text-sm">{new Date(req.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="primary" size="sm" onClick={() => approveRequest(req.id)} disabled={busyGuestId === req.id} className="bg-emerald-600 hover:bg-emerald-700">
+                            <CheckCircle2 size={16} className="mr-1" />
+                            Approve
+                          </Button>
+                          <Button variant="secondary" size="sm" onClick={() => rejectRequest(req.id)} disabled={busyGuestId === req.id} className="border-red-500/40 text-red-200 hover:bg-red-500/20">
+                            <XCircle size={16} className="mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </motion.div>
         )}
 

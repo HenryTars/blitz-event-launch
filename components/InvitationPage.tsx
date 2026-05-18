@@ -13,6 +13,7 @@ interface InvitationPageProps {
   token: string;
   shortCode?: string;
   guestName: string;
+  isApproved: boolean;
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LATER';
   initialPreorderQuantity: number;
   event: {
@@ -29,7 +30,7 @@ interface InvitationPageProps {
   };
 }
 
-export default function InvitationPage({ token, shortCode, guestName, status, initialPreorderQuantity, event }: InvitationPageProps) {
+export default function InvitationPage({ token, shortCode, guestName, isApproved, status, initialPreorderQuantity, event }: InvitationPageProps) {
   const [rsvpStatus, setRsvpStatus] = useState<'PENDING' | 'ACCEPTED' | 'DECLINED' | 'LATER'>(status);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,6 +131,38 @@ export default function InvitationPage({ token, shortCode, guestName, status, in
       setIsSavingPreorder(false);
     }
   };
+
+  if (!isApproved) {
+    return (
+      <div className="min-h-screen bg-[#09070b] text-pearl flex items-center justify-center">
+        <div className="text-center max-w-lg px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber/20 bg-amber/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-amber">
+              <Clock className="h-3.5 w-3.5" />
+              Awaiting Approval
+            </div>
+            <h1 className="font-serif text-display-md text-white text-shadow-subtle mb-4">
+              Dear {guestName}
+            </h1>
+            <p className="text-slate-300 mb-6">
+              Your invitation request for <span className="text-white font-semibold">{event.title}</span> has been submitted.
+            </p>
+            <div className="divider-gold-thick mx-auto mb-6 max-w-xs" />
+            <div className="glass rounded-2xl p-6">
+              <Clock className="h-8 w-8 text-gold mx-auto mb-3" />
+              <p className="text-slate-400 text-sm">
+                Your request is pending review by the event organizer. You will receive a notification once it&apos;s approved. Feel free to check back later using this link.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#09070b] text-pearl">
