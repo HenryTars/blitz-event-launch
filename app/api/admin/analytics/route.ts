@@ -8,7 +8,7 @@ export async function GET() {
 
   const [usersByRole, eventsByStatus, invitationsByStatus, totalCheckIns, recentSignups] = await Promise.all([
     prisma.user.groupBy({ by: ['role'], _count: true }),
-    prisma.event.groupBy({ by: ['published', 'deleted'], _count: true }),
+    prisma.event.groupBy({ by: ['status', 'deleted'], _count: true }),
     prisma.invitation.groupBy({ by: ['status'], _count: true }),
     prisma.checkIn.count(),
     prisma.user.count({ where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),

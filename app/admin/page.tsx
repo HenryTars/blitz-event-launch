@@ -7,7 +7,11 @@ export default async function AdminDashboardPage() {
     totalOrganizers,
     totalAdmins,
     totalEvents,
-    publishedEvents,
+    publishedCount,
+    pendingCount,
+    draftCount,
+    rejectedCount,
+    archivedCount,
     totalInvitations,
     totalCheckIns,
     recentUsers,
@@ -19,7 +23,11 @@ export default async function AdminDashboardPage() {
     prisma.user.count({ where: { role: 'ORGANIZER' } }),
     prisma.user.count({ where: { role: 'SUPER_ADMIN' } }),
     prisma.event.count(),
-    prisma.event.count({ where: { published: true, deleted: false } }),
+    prisma.event.count({ where: { status: 'PUBLISHED', deleted: false } }),
+    prisma.event.count({ where: { status: 'PENDING_APPROVAL', deleted: false } }),
+    prisma.event.count({ where: { status: 'DRAFT', deleted: false } }),
+    prisma.event.count({ where: { status: 'REJECTED', deleted: false } }),
+    prisma.event.count({ where: { status: 'ARCHIVED', deleted: false } }),
     prisma.invitation.count(),
     prisma.checkIn.count(),
     prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 10 }),
@@ -29,8 +37,11 @@ export default async function AdminDashboardPage() {
   ]);
 
   const eventsByStatus = {
-    published: publishedEvents,
-    draft: totalEvents - publishedEvents,
+    published: publishedCount,
+    pending: pendingCount,
+    draft: draftCount,
+    rejected: rejectedCount,
+    archived: archivedCount,
     total: totalEvents,
   };
 

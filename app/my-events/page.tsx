@@ -14,6 +14,8 @@ interface EventSummary {
   venue?: string;
   startAt: string;
   theme: string;
+  status: string;
+  featured: boolean;
   book: { title: string; author: string } | null;
   analytics: {
     totalInvites: number;
@@ -125,9 +127,21 @@ export default function MyEventsPage() {
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-gold">{event.theme}</p>
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-gold">{event.theme}</p>
+                      {event.featured && <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold">Featured</span>}
+                    </div>
                     <h2 className="mt-2 text-2xl font-semibold text-white">{event.title}</h2>
                     <p className="mt-2 text-slate-400">{new Date(event.startAt).toLocaleString()} / {event.venue || 'Venue TBA'}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium ${
+                        event.status === 'PUBLISHED' ? 'bg-emerald-500/10 text-emerald-400' :
+                        event.status === 'PENDING_APPROVAL' ? 'bg-amber-500/10 text-amber-400' :
+                        event.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
+                        event.status === 'ARCHIVED' ? 'bg-slate-500/10 text-slate-500' :
+                        'bg-slate-500/10 text-slate-400'
+                      }`}>{event.status?.replace(/_/g, ' ')}</span>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Link href={`/events/${event.slug}`}><Button variant="secondary">View Event</Button></Link>

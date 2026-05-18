@@ -23,7 +23,7 @@ interface Props {
     totalEvents: number;
     totalInvitations: number;
     totalCheckIns: number;
-    eventsByStatus: { published: number; draft: number; total: number };
+    eventsByStatus: { published: number; pending: number; draft: number; rejected: number; archived: number; total: number };
     eventsByDay: { date: string; count: number }[];
   };
   recentUsers: { id: string; name: string | null; email: string; role: string; createdAt: string }[];
@@ -81,17 +81,38 @@ export default function AdminDashboardClient({ stats, recentUsers, recentEvents,
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Published</span>
-              <span className="font-medium text-white">{stats.eventsByStatus.published}</span>
+              <span className="font-medium text-emerald-400">{stats.eventsByStatus.published}</span>
             </div>
             <div className="h-2 rounded-full bg-white/5">
               <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${stats.eventsByStatus.total > 0 ? (stats.eventsByStatus.published / stats.eventsByStatus.total) * 100 : 0}%` }} />
             </div>
             <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400">Pending Approval</span>
+              <span className="font-medium text-amber-400">{stats.eventsByStatus.pending}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5">
+              <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${stats.eventsByStatus.total > 0 ? (stats.eventsByStatus.pending / stats.eventsByStatus.total) * 100 : 0}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Draft</span>
-              <span className="font-medium text-white">{stats.eventsByStatus.draft}</span>
+              <span className="font-medium text-slate-400">{stats.eventsByStatus.draft}</span>
             </div>
             <div className="h-2 rounded-full bg-white/5">
               <div className="h-2 rounded-full bg-slate-500 transition-all" style={{ width: `${stats.eventsByStatus.total > 0 ? (stats.eventsByStatus.draft / stats.eventsByStatus.total) * 100 : 0}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400">Rejected</span>
+              <span className="font-medium text-red-400">{stats.eventsByStatus.rejected}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5">
+              <div className="h-2 rounded-full bg-red-500 transition-all" style={{ width: `${stats.eventsByStatus.total > 0 ? (stats.eventsByStatus.rejected / stats.eventsByStatus.total) * 100 : 0}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400">Archived</span>
+              <span className="font-medium text-slate-500">{stats.eventsByStatus.archived}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5">
+              <div className="h-2 rounded-full bg-slate-600 transition-all" style={{ width: `${stats.eventsByStatus.total > 0 ? (stats.eventsByStatus.archived / stats.eventsByStatus.total) * 100 : 0}%` }} />
             </div>
           </div>
         </motion.div>

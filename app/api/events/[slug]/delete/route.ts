@@ -25,7 +25,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ sl
   // Soft delete
   await prisma.event.update({
     where: { id: event.id },
-    data: { deleted: true, deletedAt: new Date(), published: false },
+    data: { deleted: true, deletedAt: new Date(), status: 'ARCHIVED' },
   });
 
   await createAuditLog({

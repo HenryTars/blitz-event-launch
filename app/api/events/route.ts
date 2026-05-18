@@ -15,7 +15,7 @@ const createSlug = (title: string) =>
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      where: { published: true, deleted: false, startAt: { gte: new Date() } },
+      where: { status: 'PUBLISHED', deleted: false, startAt: { gte: new Date() } },
       include: {
         books: true,
         author: { select: { name: true } },
@@ -131,13 +131,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create event
+    // Create event (status starts as PENDING_APPROVAL — admin must approve)
     const eventId = createId();
     const eventResult = await client.query(
-      `INSERT INTO "Event" (id, title, description, slug, venue, "startAt", "endAt", "heroImageUrl", theme, "authorId")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO "Event" (id, title, description, slug, venue, "startAt", "endAt", "heroImageUrl", theme, "authorId", status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id, title, slug`,
-      [eventId, title, description, slug, venue, new Date(startAt), endAt ? new Date(endAt) : null, heroImageUrl, theme, author.id]
+      [eventId, title, description, slug, venue, new Date(startAt), endAt ? new Date(endAt) : null, heroImageUrl, theme, author.id, 'PENDING_APPROVAL']
     );
     const event = eventResult.rows[0];
 

@@ -14,6 +14,14 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
 model User {
   id            String          @id @default(cuid())
   email         String          @unique
@@ -33,30 +41,36 @@ model User {
 }
 
 model Event {
-  id            String       @id @default(cuid())
-  title         String
-  description   String
-  slug          String       @unique
-  venue         String?
-  startAt       DateTime
-  endAt         DateTime?
-  heroImageUrl  String?
-  theme         String       @default("luxury")
-  published     Boolean      @default(false)
-  featured      Boolean      @default(false)
-  deleted       Boolean      @default(false)
-  deletedAt     DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  author        User         @relation(fields: [authorId], references: [id], name: "AuthorEvents")
-  authorId      String
-  books         Book[]
-  invitations   Invitation[]
-  analytics     EventAnalytics?
+  id              String       @id @default(cuid())
+  title           String
+  description     String
+  slug            String       @unique
+  venue           String?
+  startAt         DateTime
+  endAt           DateTime?
+  heroImageUrl    String?
+  theme           String       @default("luxury")
+  status          EventStatus  @default(DRAFT)
+  featured        Boolean      @default(false)
+  deleted         Boolean      @default(false)
+  deletedAt       DateTime?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
+  archivedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  author          User         @relation(fields: [authorId], references: [id], name: "AuthorEvents")
+  authorId        String
+  books           Book[]
+  invitations     Invitation[]
+  analytics       EventAnalytics?
 
   @@index([authorId])
-  @@index([published, deleted])
-  @@index([featured, published, deleted])
+  @@index([status])
+  @@index([featured, status])
   @@index([slug])
 }
 

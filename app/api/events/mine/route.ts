@@ -44,6 +44,8 @@ export async function GET() {
       endAt: event.endAt,
       heroImageUrl: event.heroImageUrl,
       theme: event.theme,
+      status: event.status,
+      featured: event.featured,
       createdAt: event.createdAt,
       book: event.books.length > 0 ? {
         title: event.books[0].title,

@@ -28,6 +28,13 @@ export async function GET(
       venue: event.venue,
       startAt: event.startAt,
       endAt: event.endAt,
+      heroImageUrl: event.heroImageUrl,
+      theme: event.theme,
+      status: event.status,
+      featured: event.featured,
+      createdAt: event.createdAt,
+      approvedAt: event.approvedAt,
+      rejectionReason: event.rejectionReason,
       books: event.books,
       analytics: event.analytics
         ? {

@@ -17,7 +17,9 @@ interface EventData {
   endAt: string | null;
   heroImageUrl: string | null;
   theme: string;
-  published: boolean;
+  status: string;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
   books: Array<{
     id: string;
     title: string;
@@ -130,21 +132,39 @@ export default function EditEventPage() {
     setSaving(false);
   };
 
-  const handleTogglePublish = async () => {
+  const handleRequestApproval = async () => {
     setSaving(true);
     try {
       const res = await fetch('/api/admin/events', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventId: event!.id,
-          action: event!.published ? 'unpublish' : 'publish',
-        }),
+        body: JSON.stringify({ eventId: event!.id, status: 'PENDING_APPROVAL' }),
       });
       const data = await res.json();
       if (res.ok) {
-        setEvent((prev) => prev ? { ...prev, published: !prev.published } : prev);
-        setMessage(event!.published ? 'Event unpublished' : 'Event published');
+        setEvent((prev) => prev ? { ...prev, status: 'PENDING_APPROVAL' } : prev);
+        setMessage('Submitted for admin approval');
+      } else {
+        setMessage(data.error || 'Action failed');
+      }
+    } catch {
+      setMessage('Network error');
+    }
+    setSaving(false);
+  };
+
+  const handleUnpublish = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/events', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event!.id, status: 'DRAFT' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEvent((prev) => prev ? { ...prev, status: 'DRAFT' } : prev);
+        setMessage('Event returned to draft');
       } else {
         setMessage(data.error || 'Action failed');
       }
@@ -186,10 +206,26 @@ export default function EditEventPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm" onClick={handleTogglePublish} disabled={saving} className="gap-2">
-              {event.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {event.published ? 'Unpublish' : 'Publish'}
-            </Button>
+            {event.status === 'DRAFT' && (
+              <Button variant="secondary" size="sm" onClick={handleRequestApproval} disabled={saving} className="gap-2">
+                <Eye className="h-4 w-4" /> Submit for Approval
+              </Button>
+            )}
+            {event.status === 'PUBLISHED' && (
+              <Button variant="secondary" size="sm" onClick={handleUnpublish} disabled={saving} className="gap-2">
+                <EyeOff className="h-4 w-4" /> Unpublish
+              </Button>
+            )}
+            {event.status === 'PENDING_APPROVAL' && (
+              <span className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400">
+                Awaiting approval
+              </span>
+            )}
+            {event.status === 'REJECTED' && (
+              <span className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-400">
+                Rejected{event.rejectionReason ? `: ${event.rejectionReason}` : ''}
+              </span>
+            )}
             <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? 'Saving...' : 'Save Changes'}

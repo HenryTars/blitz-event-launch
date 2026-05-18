@@ -24,7 +24,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const body = await request.json();
-  const { title, description, venue, startAt, endAt, heroImageUrl, theme, published, book } = body;
+  const { title, description, venue, startAt, endAt, heroImageUrl, theme, status, book } = body;
 
   const updateData: any = {};
   if (title !== undefined) updateData.title = title;
@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (endAt !== undefined) updateData.endAt = endAt ? new Date(endAt) : null;
   if (heroImageUrl !== undefined) updateData.heroImageUrl = heroImageUrl;
   if (theme !== undefined) updateData.theme = theme;
-  if (published !== undefined) updateData.published = published;
+  if (status !== undefined) updateData.status = status;
 
   const updated = await prisma.event.update({
     where: { id: event.id },
