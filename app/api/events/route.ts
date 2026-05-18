@@ -19,7 +19,10 @@ export async function GET() {
       where: {
         status: 'PUBLISHED',
         deleted: false,
-        endAt: { gte: new Date() }
+        OR: [
+          { endAt: { gte: new Date() } },
+          { endAt: null }
+        ]
       },
       include: {
         books: true,

@@ -52,13 +52,16 @@ export default function Header() {
     const checkAuth = async () => {
       const supabase = createSupabaseBrowserClient();
       if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email && !cancelled) {
-          const email = user.email.toLowerCase();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email && !cancelled) {
+          const email = session.user.email.toLowerCase();
           try {
             const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 3000);
-            const res = await fetch('/api/auth/me', { signal: ctrl.signal });
+            const timer = setTimeout(() => ctrl.abort(), 8000);
+            const res = await fetch('/api/auth/me', {
+              signal: ctrl.signal,
+              headers: { authorization: `Bearer ${session.access_token}` }
+            });
             clearTimeout(timer);
             if (res.ok) {
               const data = await res.json();
@@ -77,7 +80,6 @@ export default function Header() {
 
     checkAuth();
 
-    // Listen for auth state changes (sign in/out)
     const supabase = createSupabaseBrowserClient();
     const { data: { subscription } } = supabase?.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
