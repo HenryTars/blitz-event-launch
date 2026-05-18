@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import QRCodeComponent from '@/components/QRCode';
+import ShareEvent from '@/components/ShareEvent';
 import { Calendar, MapPin, Clock, BookOpen, CheckCircle, XCircle, Clock as ClockIcon, Sparkles, Share2, type LucideIcon } from 'lucide-react';
 
 interface InvitationPageProps {
@@ -149,10 +150,18 @@ export default function InvitationPage({ token, shortCode, guestName, status, in
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-gold"
+              className="mb-6 flex items-center justify-center gap-3"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              You&apos;re Invited
+              <span className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-gold">
+                <Sparkles className="h-3.5 w-3.5" />
+                You&apos;re Invited
+              </span>
+              <ShareEvent
+                url={`${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${token}`}
+                title={`Invitation: ${event.title}`}
+                description={`You're invited to ${event.title}`}
+                variant="icon"
+              />
             </motion.div>
 
             <h1 className="font-serif text-display-md text-white text-shadow-subtle mb-4">

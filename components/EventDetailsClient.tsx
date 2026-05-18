@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import ShareEvent from '@/components/ShareEvent';
 import {
   Calendar,
   MapPin,
@@ -201,7 +202,7 @@ export default function EventDetailsClient({
               {event.description}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-2 text-sm text-slate-300">
                 <Calendar className="h-4 w-4 text-gold" />
                 {eventDate.toLocaleDateString('en-US', {
@@ -215,6 +216,13 @@ export default function EventDetailsClient({
                 <MapPin className="h-4 w-4 text-gold" />
                 {event.venue || 'Venue TBA'}
               </div>
+              {slug && (
+                <ShareEvent
+                  url={`${typeof window !== 'undefined' ? window.location.origin : ''}/events/${slug}`}
+                  title={event.title}
+                  description={event.description}
+                />
+              )}
             </div>
 
             <p className="mt-8 max-w-2xl border-l border-gold/60 pl-5 font-serif text-quote-md text-pearl/80 leading-relaxed">
