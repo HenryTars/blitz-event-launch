@@ -18,17 +18,11 @@ export async function GET() {
     const events = await prisma.event.findMany({
       where: {
         status: 'PUBLISHED',
-        deleted: false,
-        OR: [
-          { endAt: { gte: new Date() } },
-          { endAt: null },
-          { startAt: { gte: new Date() } }
-        ]
+        deleted: false
       },
       include: {
         books: true,
-        author: { select: { name: true } },
-        analytics: true
+        author: { select: { name: true } }
       },
       orderBy: { startAt: 'asc' },
       take: 50
