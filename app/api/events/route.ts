@@ -49,8 +49,8 @@ export async function GET() {
               coverUrl: event.books[0].coverUrl
             }
           : null,
-        attendanceCount: event.analytics?.attendanceCount ?? 0,
-        totalInvites: event.analytics?.totalInvites ?? 0
+        attendanceCount: 0,
+        totalInvites: 0
       }));
 
     return NextResponse.json({ events: formatted });
