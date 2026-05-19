@@ -15,7 +15,8 @@ const createSlug = (title: string) =>
 export async function GET() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000
   });
 
   try {
@@ -79,7 +80,8 @@ export async function POST(req: Request) {
     connectionString: process.env.DATABASE_URL,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    connectionTimeoutMillis: 10000
   });
 
   try {
