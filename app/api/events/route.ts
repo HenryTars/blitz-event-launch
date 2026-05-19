@@ -21,7 +21,8 @@ export async function GET() {
         deleted: false,
         OR: [
           { endAt: { gte: new Date() } },
-          { endAt: null }
+          { endAt: null },
+          { startAt: { gte: new Date() } }
         ]
       },
       include: {

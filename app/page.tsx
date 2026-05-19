@@ -58,7 +58,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#09070b] overflow-hidden">
       {/* ─── Cinematic Hero ─── */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+      <section className="relative h-screen flex items-center overflow-hidden">
         {/* Layered backgrounds */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(197,165,123,0.15),transparent)]" />
@@ -71,7 +71,7 @@ export default function HomePage() {
         <div className="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-gold/5 blur-[120px] animate-float" />
         <div className="absolute right-1/4 bottom-1/3 h-48 w-48 rounded-full bg-purple-500/5 blur-[100px] animate-float-slow" />
 
-        <div className="relative mx-auto max-w-6xl px-6 lg:px-8 py-32 sm:py-40">
+        <div className="relative mx-auto max-w-6xl px-6 lg:px-8 py-12 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
