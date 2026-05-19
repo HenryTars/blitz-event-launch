@@ -3,7 +3,6 @@ import { createEventSchema } from '@/lib/validation/event';
 import { requireAuthenticatedUser } from '@/lib/auth';
 import { Client } from 'pg';
 import { createId } from '@paralleldrive/cuid2';
-import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit';
 import { getEventLifecycle } from '@/lib/event-lifecycle';
 
@@ -14,49 +13,64 @@ const createSlug = (title: string) =>
     .replace(/(^-|-$)/g, '');
 
 export async function GET() {
-  try {
-    const events = await prisma.event.findMany({
-      where: {
-        status: 'PUBLISHED',
-        deleted: false
-      },
-      include: {
-        books: true,
-        author: { select: { name: true } }
-      },
-      orderBy: { startAt: 'asc' },
-      take: 50
-    });
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
 
-    const formatted = events
-      .map((event) => ({
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        slug: event.slug,
-        venue: event.venue,
-        startAt: event.startAt,
-        endAt: event.endAt,
-        heroImageUrl: event.heroImageUrl,
-        theme: event.theme,
-        featured: event.featured,
-        lifecycle: getEventLifecycle(event.startAt, event.endAt),
-        authorName: event.author.name,
-        book: event.books[0]
-          ? {
-              title: event.books[0].title,
-              author: event.books[0].author,
-              coverUrl: event.books[0].coverUrl
-            }
-          : null,
-        attendanceCount: 0,
-        totalInvites: 0
-      }));
+  try {
+    await client.connect();
+
+    const result = await client.query(`
+      SELECT
+        e.id, e.title, e.description, e.slug, e.venue,
+        e."startAt", e."endAt", e."heroImageUrl", e.theme,
+        e.featured, e.status, u.name AS "authorName",
+        row_to_json(b.*) AS book,
+        ea."attendanceCount", ea."totalInvites"
+      FROM "Event" e
+      LEFT JOIN "User" u ON u.id = e."authorId"
+      LEFT JOIN "Book" b ON b."eventId" = e.id
+      LEFT JOIN "EventAnalytics" ea ON ea."eventId" = e.id
+      WHERE e.status = 'PUBLISHED' AND e.deleted = false
+        AND (e."endAt" IS NULL OR e."endAt" >= NOW() OR e."startAt" >= NOW())
+      ORDER BY e."startAt" ASC
+      LIMIT 50
+    `);
+
+    const formatted = result.rows.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      slug: row.slug,
+      venue: row.venue,
+      startAt: row.startAt,
+      endAt: row.endAt,
+      heroImageUrl: row.heroImageUrl,
+      theme: row.theme,
+      featured: row.featured ?? false,
+      lifecycle: getEventLifecycle(row.startAt, row.endAt),
+      authorName: row.authorName,
+      book: row.book?.id
+        ? {
+            title: row.book.title,
+            author: row.book.author,
+            coverUrl: row.book.coverUrl
+          }
+        : null,
+      attendanceCount: row.attendanceCount ?? 0,
+      totalInvites: row.totalInvites ?? 0
+    }));
 
     return NextResponse.json({ events: formatted });
   } catch (error) {
     console.error('Error fetching events:', error);
-    return NextResponse.json({ events: [] });
+    return NextResponse.json({
+      events: [],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  } finally {
+    await client.end();
   }
 }
 
