@@ -36,8 +36,11 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isFetching = useRef(false);
 
   const fetchNotifications = async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
     try {
       const res = await authFetch('/api/notifications');
       if (res.ok) {
@@ -47,6 +50,8 @@ export default function NotificationBell() {
       }
     } catch {
       // silently fail
+    } finally {
+      isFetching.current = false;
     }
   };
 

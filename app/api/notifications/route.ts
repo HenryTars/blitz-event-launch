@@ -1,30 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { Client } from 'pg';
 import { getCurrentUserFromRequest } from '@/lib/rbac';
 import { createNotification } from '@/lib/notifications';
 
 export async function GET(req: NextRequest) {
-  try {
-    const currentUser = await getCurrentUserFromRequest(req);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const currentUser = await getCurrentUserFromRequest(req);
+  if (!currentUser) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    const [notifications, unreadCount] = await Promise.all([
-      prisma.notification.findMany({
-        where: { userId: currentUser.id },
-        orderBy: { createdAt: 'desc' },
-        take: 50
-      }),
-      prisma.notification.count({
-        where: { userId: currentUser.id, isRead: false }
-      })
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 8000
+  });
+
+  try {
+    await client.connect();
+
+    const [notifResult, countResult] = await Promise.all([
+      client.query(
+        `SELECT id, type, title, message, link, "isRead", "createdAt"
+         FROM "Notification"
+         WHERE "userId" = $1
+         ORDER BY "createdAt" DESC
+         LIMIT 50`,
+        [currentUser.id]
+      ),
+      client.query(
+        `SELECT COUNT(*)::int AS count FROM "Notification"
+         WHERE "userId" = $1 AND "isRead" = false`,
+        [currentUser.id]
+      )
     ]);
 
-    return NextResponse.json({ notifications, unreadCount });
+    return NextResponse.json({
+      notifications: notifResult.rows,
+      unreadCount: countResult.rows[0].count
+    });
   } catch (error) {
     console.error('Notifications fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch notifications.' }, { status: 500 });
+  } finally {
+    await client.end().catch(() => {});
   }
 }
 

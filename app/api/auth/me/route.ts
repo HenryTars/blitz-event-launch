@@ -27,20 +27,34 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ user: null });
     }
 
-    // Upsert: create the DB user on first call if they signed up via Supabase
-    const dbUser = await prisma.user.upsert({
+    // Fast path: user already exists (most calls)
+    let dbUser = await prisma.user.findUnique({
       where: { email },
-      update: {},
-      create: {
-        email,
-        name:
-          supabaseUser?.user_metadata?.name ||
-          supabaseUser?.user_metadata?.full_name ||
-          email.split('@')[0],
-        role: 'USER'
-      },
       select: { id: true, email: true, name: true, role: true }
     });
+
+    // Slow path: new Supabase signup — provision DB record once
+    if (!dbUser) {
+      try {
+        dbUser = await prisma.user.create({
+          data: {
+            email,
+            name:
+              supabaseUser?.user_metadata?.name ||
+              supabaseUser?.user_metadata?.full_name ||
+              email.split('@')[0],
+            role: 'USER'
+          },
+          select: { id: true, email: true, name: true, role: true }
+        });
+      } catch {
+        // Race condition: another concurrent request already created it
+        dbUser = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true, email: true, name: true, role: true }
+        });
+      }
+    }
 
     return NextResponse.json({ user: dbUser });
   } catch {
