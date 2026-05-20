@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createEventSchema } from '@/lib/validation/event';
 import { requireAuthenticatedUser } from '@/lib/auth';
 import { Client } from 'pg';
@@ -75,7 +75,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
   try {
     await client.connect();
 
-    const auth = await requireAuthenticatedUser();
+    const auth = await requireAuthenticatedUser(req);
     if (!auth.user) return auth.errorResponse!;
 
     const body = await req.json();

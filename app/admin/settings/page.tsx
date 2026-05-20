@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Save } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -12,7 +13,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const res = await fetch('/api/admin/settings');
+      const res = await authFetch('/api/admin/settings');
       const data = await res.json();
       if (res.ok) setSettings(data.settings || {});
       setLoading(false);
@@ -23,7 +24,7 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     setMessage('');
-    const res = await fetch('/api/admin/settings', {
+    const res = await authFetch('/api/admin/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ settings }),

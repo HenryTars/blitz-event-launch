@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 
 const createToken = (eventId: string, guestName: string) => {
   const raw = `${eventId}|${guestName}|${Date.now()}|${crypto.randomUUID()}`;
@@ -12,7 +13,7 @@ const createToken = (eventId: string, guestName: string) => {
 };
 
 export async function POST(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string; invitationId: string }> }
 ) {
   try {
@@ -23,6 +24,11 @@ export async function POST(
     });
     if (!event) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+    }
+
+    const currentUser = await getCurrentUserFromRequest(req);
+    if (!currentUser || (!isAdmin(currentUser) && !isEventOwner(event, currentUser))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const invitation = await prisma.invitation.findFirst({

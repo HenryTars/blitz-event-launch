@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import QRCodeComponent from '@/components/QRCode';
 import DeleteEventModal from '@/components/DeleteEventModal';
 import { Download, QrCode, Users, CheckCircle2, XCircle, Clock, Mail as MailIcon, BookOpen, Edit3, Trash2 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Guest {
   id: string;
@@ -61,13 +62,13 @@ export default function EventDashboard() {
       const data = await response.json();
       setEventData(data);
 
-      const guestsResponse = await fetch(`/api/events/${slug}/guests`);
+      const guestsResponse = await authFetch(`/api/events/${slug}/guests`);
       if (guestsResponse.ok) {
         const guestsData = await guestsResponse.json();
         setGuests(guestsData);
       }
 
-      const pendingResponse = await fetch(`/api/invitations/pending?eventSlug=${slug}`);
+      const pendingResponse = await authFetch(`/api/invitations/pending?eventSlug=${slug}`);
       if (pendingResponse.ok) {
         const pendingData = await pendingResponse.json();
         setPendingRequests(pendingData.pending);
@@ -112,7 +113,7 @@ export default function EventDashboard() {
   const approveRequest = async (id: string) => {
     try {
       setBusyGuestId(id);
-      const response = await fetch(`/api/invitations/${id}/approve`, { method: 'POST' });
+      const response = await authFetch(`/api/invitations/${id}/approve`, { method: 'POST' });
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.error || 'Failed to approve');
@@ -130,7 +131,7 @@ export default function EventDashboard() {
     const reason = window.prompt('Reason for rejection (optional):');
     try {
       setBusyGuestId(id);
-      const response = await fetch(`/api/invitations/${id}/reject`, {
+      const response = await authFetch(`/api/invitations/${id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: reason || undefined })
@@ -178,7 +179,7 @@ export default function EventDashboard() {
   const regenerateInvite = async (guest: Guest) => {
     try {
       setBusyGuestId(guest.id);
-      const response = await fetch(`/api/events/${slug}/guests/${guest.id}/regenerate`, {
+      const response = await authFetch(`/api/events/${slug}/guests/${guest.id}/regenerate`, {
         method: 'POST'
       });
       const result = await response.json();
@@ -195,7 +196,7 @@ export default function EventDashboard() {
   const removeGuest = async (guest: Guest) => {
     try {
       setBusyGuestId(guest.id);
-      const response = await fetch(`/api/events/${slug}/guests/${guest.id}`, {
+      const response = await authFetch(`/api/events/${slug}/guests/${guest.id}`, {
         method: 'DELETE'
       });
       const result = await response.json();

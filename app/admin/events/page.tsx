@@ -203,7 +203,7 @@ export default function AdminEventsPage() {
                       )}
                       <button onClick={() => {
                           const isFeatured = event.featured;
-                          fetch('/api/admin/events', {
+                          authFetch('/api/admin/events', {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ eventId: event.id, action: isFeatured ? 'unfeature' : 'feature' }),

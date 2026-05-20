@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getInviteLink } from '@/lib/url';
 import { generateShortCode } from '@/lib/shortcode';
-import { getCurrentUser, isAdmin, isEventOwner } from '@/lib/rbac';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 
 function createToken(eventId: string, guestName: string) {
   const raw = `${eventId}|${guestName}|${Date.now()}|${crypto.randomUUID()}`;
@@ -14,7 +14,7 @@ function createToken(eventId: string, guestName: string) {
     .replace(/=+$/, '');
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { eventSlug, guestName, email, phone } = body;
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     }
 
     // Auto-approve if the requester is the event owner or an admin
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUserFromRequest(req);
     const shouldAutoApprove = !!(currentUser && (isAdmin(currentUser) || isEventOwner(event, currentUser)));
 
     const token = createToken(event.id, guestName);

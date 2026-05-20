@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Save, Eye, EyeOff, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface EventData {
   id: string;
@@ -101,7 +102,7 @@ export default function EditEventPage() {
     setSaving(true);
     setMessage('');
     try {
-      const res = await fetch(`/api/events/${slug}/edit`, {
+      const res = await authFetch(`/api/events/${slug}/edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +137,7 @@ export default function EditEventPage() {
   const handleRequestApproval = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/admin/events', {
+      const res = await authFetch('/api/admin/events', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event!.id, status: 'PENDING_APPROVAL' }),
@@ -157,7 +158,7 @@ export default function EditEventPage() {
   const handleUnpublish = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/admin/events', {
+      const res = await authFetch('/api/admin/events', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event!.id, status: 'DRAFT' }),

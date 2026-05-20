@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit';
 
-export async function POST(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const auth = await requireAuthenticatedUser();
+export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const auth = await requireAuthenticatedUser(request);
   if (!auth.user) return auth.errorResponse!;
 
   const slug = (await params).slug;

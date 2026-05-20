@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 
@@ -13,7 +13,7 @@ export interface AuthUser {
   authId: string;
 }
 
-export async function requireAuthenticatedUser() {
+export async function requireAuthenticatedUser(req?: NextRequest) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return {
@@ -21,7 +21,21 @@ export async function requireAuthenticatedUser() {
       errorResponse: NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
     };
   }
-  const { data, error } = await supabase.auth.getUser();
+
+  let data: Awaited<ReturnType<typeof supabase.auth.getUser>>['data'];
+  let error: Awaited<ReturnType<typeof supabase.auth.getUser>>['error'];
+
+  if (req) {
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    if (token) {
+      ({ data, error } = await supabase.auth.getUser(token));
+    } else {
+      ({ data, error } = await supabase.auth.getUser());
+    }
+  } else {
+    ({ data, error } = await supabase.auth.getUser());
+  }
 
   if (error || !data.user?.email) {
     return {

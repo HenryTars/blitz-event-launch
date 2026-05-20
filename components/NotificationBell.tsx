@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, ExternalLink, X } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Notification {
   id: string;
@@ -38,7 +39,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const res = await authFetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications);
@@ -66,13 +67,13 @@ export default function NotificationBell() {
   }, []);
 
   const markAsRead = async (id: string) => {
-    await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+    await authFetch(`/api/notifications/${id}`, { method: 'PATCH' });
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
   const markAllRead = async () => {
-    await fetch('/api/notifications/read-all', { method: 'PATCH' });
+    await authFetch('/api/notifications/read-all', { method: 'PATCH' });
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
   };

@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 
 export async function DELETE(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string; invitationId: string }> }
 ) {
   try {
@@ -13,6 +14,11 @@ export async function DELETE(
     });
     if (!event) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+    }
+
+    const currentUser = await getCurrentUserFromRequest(req);
+    if (!currentUser || (!isAdmin(currentUser) && !isEventOwner(event, currentUser))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const invitation = await prisma.invitation.findFirst({

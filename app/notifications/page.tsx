@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Bell, CheckCheck, ExternalLink, Trash2, ArrowLeft } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 function timeAgo(date: string) {
   const now = Date.now();
@@ -36,7 +37,7 @@ export default function NotificationsPage() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const res = await authFetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications);
@@ -53,17 +54,17 @@ export default function NotificationsPage() {
   }, []);
 
   const markAsRead = async (id: string) => {
-    await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+    await authFetch(`/api/notifications/${id}`, { method: 'PATCH' });
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
   };
 
   const markAllRead = async () => {
-    await fetch('/api/notifications/read-all', { method: 'PATCH' });
+    await authFetch('/api/notifications/read-all', { method: 'PATCH' });
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   const deleteNotification = async (id: string) => {
-    await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+    await authFetch(`/api/notifications/${id}`, { method: 'DELETE' });
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 

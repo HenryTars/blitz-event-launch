@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser, isAdmin, isEventOwner } from '@/lib/rbac';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Invitation not found.' }, { status: 404 });
     }
 
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUserFromRequest(req);
     if (!currentUser || (!isAdmin(currentUser) && !isEventOwner(invitation.event, currentUser))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

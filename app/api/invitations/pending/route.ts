@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser, isAdmin, isEventOwner } from '@/lib/rbac';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
     }
 
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUserFromRequest(req);
     if (!currentUser || (!isAdmin(currentUser) && !isEventOwner(event, currentUser))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

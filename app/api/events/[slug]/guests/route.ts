@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { Invitation } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserFromRequest, isAdmin, isEventOwner } from '@/lib/rbac';
 
 export async function GET(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -15,6 +16,11 @@ export async function GET(
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    const currentUser = await getCurrentUserFromRequest(req);
+    if (!currentUser || (!isAdmin(currentUser) && !isEventOwner(event, currentUser))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const invitations = await prisma.invitation.findMany({

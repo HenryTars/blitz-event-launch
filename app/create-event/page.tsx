@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import InvitationGenerator from '@/components/InvitationGenerator';
 import ImageUpload from '@/components/ImageUpload';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { authFetch } from '@/lib/auth-fetch';
 
 type FormData = {
   title: string;
@@ -91,7 +92,7 @@ export default function CreateEventPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch('/api/events', {
+      const response = await authFetch('/api/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
