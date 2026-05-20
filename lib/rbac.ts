@@ -1,8 +1,8 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import type { UserRole } from '@prisma/client';
 import type { NextRequest } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { queryUser } from '@/lib/db';
 
 export type { UserRole };
 
@@ -21,17 +21,10 @@ export async function getCurrentUser(authToken?: string) {
 
   if (!email) return null;
 
-  const dbUser = await prisma.user.findUnique({
-    where: { email }
-  });
-
+  const dbUser = await queryUser(email);
   if (!dbUser) return null;
 
-  return {
-    ...dbUser,
-    authId: '',
-    email
-  };
+  return { ...dbUser, authId: '' };
 }
 
 export async function getCurrentUserFromRequest(req: NextRequest) {
@@ -57,7 +50,7 @@ export async function requireRole(reqOrToken: NextRequest | string | undefined, 
   const user = typeof reqOrToken === 'string'
     ? await getCurrentUser(reqOrToken)
     : reqOrToken instanceof Request
-      ? await getCurrentUserFromRequest(reqOrToken)
+      ? await getCurrentUserFromRequest(reqOrToken as NextRequest)
       : await getCurrentUser();
   if (!user) {
     return {

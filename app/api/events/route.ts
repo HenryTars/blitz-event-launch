@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEventSchema } from '@/lib/validation/event';
 import { requireAuthenticatedUser } from '@/lib/auth';
-import { Client } from 'pg';
+import { createDbClient } from '@/lib/db';
 import { createId } from '@paralleldrive/cuid2';
 import { createAuditLog } from '@/lib/audit';
 import { getEventLifecycle } from '@/lib/event-lifecycle';
@@ -13,11 +13,7 @@ const createSlug = (title: string) =>
     .replace(/(^-|-$)/g, '');
 
 export async function GET() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 10000
-  });
+  const client = createDbClient();
 
   try {
     await client.connect();
@@ -76,13 +72,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    connectionTimeoutMillis: 10000
-  });
+  const client = createDbClient();
 
   try {
     await client.connect();

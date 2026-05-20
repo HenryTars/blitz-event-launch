@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { createDbClient } from '@/lib/db';
 import { getCurrentUserFromRequest } from '@/lib/rbac';
 import { createNotification } from '@/lib/notifications';
 
@@ -9,11 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 8000
-  });
+  const client = createDbClient();
 
   try {
     await client.connect();

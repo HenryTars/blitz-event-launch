@@ -1,62 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { prisma } from '@/lib/prisma';
-import type { User } from '@supabase/supabase-js';
+import { createDbClient } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
-
     const supabase = await createSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json({ user: null });
-    }
+    if (!supabase) return NextResponse.json({ user: null });
 
-    let supabaseUser: User | null = null;
+    let email: string | undefined;
+    let userName: string | undefined;
+
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.slice(7);
       const { data } = await supabase.auth.getUser(token);
-      supabaseUser = data.user;
+      email = data.user?.email?.toLowerCase();
+      userName = data.user?.user_metadata?.name || data.user?.user_metadata?.full_name;
     } else {
       const { data } = await supabase.auth.getUser();
-      supabaseUser = data.user;
+      email = data.user?.email?.toLowerCase();
+      userName = data.user?.user_metadata?.name || data.user?.user_metadata?.full_name;
     }
 
-    const email = supabaseUser?.email?.toLowerCase();
-    if (!email) {
-      return NextResponse.json({ user: null });
-    }
+    if (!email) return NextResponse.json({ user: null });
 
-    // Fast path: user already exists (most calls)
-    let dbUser = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true, email: true, name: true, role: true }
-    });
+    const client = createDbClient();
+    try {
+      await client.connect();
 
-    // Slow path: new Supabase signup — provision DB record once
-    if (!dbUser) {
-      try {
-        dbUser = await prisma.user.create({
-          data: {
-            email,
-            name:
-              supabaseUser?.user_metadata?.name ||
-              supabaseUser?.user_metadata?.full_name ||
-              email.split('@')[0],
-            role: 'USER'
-          },
-          select: { id: true, email: true, name: true, role: true }
-        });
-      } catch {
-        // Race condition: another concurrent request already created it
-        dbUser = await prisma.user.findUnique({
-          where: { email },
-          select: { id: true, email: true, name: true, role: true }
-        });
+      // Fast path: existing user
+      let result = await client.query(
+        `SELECT id, email, name, role FROM "User" WHERE email = $1 LIMIT 1`,
+        [email]
+      );
+
+      if (result.rows.length === 0) {
+        // Provision DB user on first login
+        const name = userName || email.split('@')[0];
+        result = await client.query(
+          `INSERT INTO "User" (id, email, name, role)
+           VALUES (gen_random_uuid()::text, $1, $2, 'USER')
+           ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+           RETURNING id, email, name, role`,
+          [email, name]
+        );
       }
-    }
 
-    return NextResponse.json({ user: dbUser });
+      return NextResponse.json({ user: result.rows[0] ?? null });
+    } finally {
+      await client.end().catch(() => {});
+    }
   } catch {
     return NextResponse.json({ user: null });
   }
